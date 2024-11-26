@@ -1,0 +1,50 @@
+/* 轮播图样式调整 */
+.carousel-item {
+    height: 300px;
+}
+
+.carousel-item img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+}
+
+.carousel-caption {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.carousel-caption h2 {
+    font-size: 1.8rem;
+}
+
+.carousel-caption p {
+    font-size: 1rem;
+}
+
+/* 返回顶部按钮 */
+#backToTop {
+    display: none;
+    width: 45px;
+    height: 45px;
+    z-index: 999;
+}
+
+/* 文章卡片悬停效果 */
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* 导航栏滚动效果 */
+.navbar {
+    transition: background-color 0.3s ease;
+}
+
+.navbar.scrolled {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+} 
