@@ -1,50 +1,85 @@
-/* 轮播图样式调整 */
-.carousel-item {
-    height: 300px;
+body {
+    background-color: #f8f9fa;
 }
 
-.carousel-item img {
-    object-fit: cover;
-    height: 100%;
-    width: 100%;
+/* Logo样式 */
+.logo h1 {
+    color: #4285f4;
+    font-family: Arial, sans-serif;
 }
 
-.carousel-caption {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 15px;
-    border-radius: 10px;
+/* 搜索框样式 */
+.search-box .form-control {
+    border-radius: 24px 0 0 24px;
+    border: 2px solid #4285f4;
+    border-right: none;
+    box-shadow: none;
 }
 
-.carousel-caption h2 {
-    font-size: 1.8rem;
+.search-box .btn {
+    border-radius: 0 24px 24px 0;
+    border: 2px solid #4285f4;
+    background-color: #4285f4;
 }
 
-.carousel-caption p {
-    font-size: 1rem;
+.search-box .btn:hover {
+    background-color: #357abd;
+    border-color: #357abd;
 }
 
-/* 返回顶部按钮 */
-#backToTop {
-    display: none;
-    width: 45px;
-    height: 45px;
-    z-index: 999;
+.search-box .form-control:focus {
+    box-shadow: none;
+    border-color: #4285f4;
 }
 
-/* 文章卡片悬停效果 */
-.card {
-    transition: transform 0.3s ease;
+/* 热门搜索标签样式 */
+.hot-search .badge {
+    font-weight: normal;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.card:hover {
-    transform: translateY(-5px);
+.hot-search .badge:hover {
+    background-color: #e9ecef !important;
 }
 
-/* 导航栏滚动效果 */
+/* 导航栏样式 */
 .navbar {
-    transition: background-color 0.3s ease;
+    background-color: transparent;
+    padding: 1rem 2rem;
 }
 
-.navbar.scrolled {
-    background-color: rgba(255, 255, 255, 0.95) !important;
+.navbar .nav-link {
+    color: #666;
+    padding: 0.5rem 1rem;
+}
+
+.navbar .nav-link:hover {
+    color: #4285f4;
+}
+
+/* 底部样式 */
+footer {
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+}
+
+footer a:hover {
+    color: #4285f4 !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .logo h1 {
+        font-size: 2rem;
+    }
+    
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    footer {
+        position: static;
+        margin-top: 2rem;
+    }
 } 
