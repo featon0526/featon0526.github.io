@@ -1,0 +1,402 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>星球大战角色数据获取工具 (修复版)</title>  
+    <style>  
+        /* --- 样式保持不变，为了节省篇幅略微压缩 --- */  
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }  
+        body { background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%); color: #e0e0ff; min-height: 100vh; padding: 20px; }  
+        .container { max-width: 1200px; margin: 0 auto; }  
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(20, 20, 40, 0.8); border-radius: 15px; border: 1px solid #3a3a6a; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }  
+        h1 { color: #ffe81f; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 232, 31, 0.3); }  
+        .subtitle { font-size: 1.1rem; color: #aaaaff; margin-bottom: 20px; }  
+        .api-input-section { background: rgba(20, 20, 40, 0.7); border-radius: 10px; padding: 20px; margin-bottom: 30px; border: 1px solid #3a3a6a; }  
+        .input-group { margin-bottom: 15px; }  
+        label { display: block; margin-bottom: 8px; color: #ffe81f; font-weight: 600; }  
+        input, select, button { width: 100%; padding: 12px; background: rgba(30, 30, 60, 0.8); border: 1px solid #3a3a6a; border-radius: 6px; color: white; font-size: 1rem; }  
+        button { background: linear-gradient(to right, #0059b3, #0077cc); color: white; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; margin-top: 10px; }  
+        button:hover { background: linear-gradient(to right, #0077cc, #0099ff); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 119, 204, 0.4); }  
+        .controls { display: flex; gap: 15px; margin-top: 20px; }  
+        .controls button { flex: 1; }  
+        .results-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }  
+        .results-panel { background: rgba(20, 20, 40, 0.7); border-radius: 10px; padding: 20px; border: 1px solid #3a3a6a; min-height: 400px; overflow-y: auto; }  
+        .results-title { color: #ffe81f; font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #3a3a6a; }  
+        .movie-item, .character-item { background: rgba(40, 40, 80, 0.5); border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #ffe81f; transition: all 0.3s; }  
+        .movie-item:hover, .character-item:hover { background: rgba(60, 60, 120, 0.5); transform: translateX(5px); }  
+        .movie-title { color: #ffe81f; font-size: 1.2rem; margin-bottom: 5px; }  
+        .movie-info { color: #aaaaff; font-size: 0.9rem; margin-bottom: 3px; }  
+        .character-name { color: #ffffff; font-size: 1.1rem; margin-bottom: 5px; }  
+        .character-actor { color: #aaaaff; font-size: 0.9rem; font-style: italic; }  
+        .loading { text-align: center; padding: 30px; color: #ffe81f; font-size: 1.2rem; }  
+        .error { color: #ff3333; background: rgba(255, 51, 51, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ff3333; }  
+        .status-bar { background: rgba(20, 20, 40, 0.8); padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #3a3a6a; display: flex; justify-content: space-between; align-items: center; }  
+        .stats { display: flex; gap: 20px; }  
+        .stat-item { text-align: center; }  
+        .stat-value { color: #ffe81f; font-size: 1.5rem; font-weight: bold; }  
+        .stat-label { color: #aaaaff; font-size: 0.9rem; }  
+        pre { background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; border: 1px solid #3a3a6a; max-height: 300px; overflow-y: auto; }  
+        .tab-container { margin-top: 20px; }  
+        .tabs { display: flex; border-bottom: 2px solid #3a3a6a; margin-bottom: 20px; }  
+        .tab { padding: 12px 24px; background: transparent; border: none; color: #aaaaff; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; transition: all 0.3s; }  
+        .tab.active { color: #ffe81f; border-bottom: 3px solid #ffe81f; }  
+        .tab-content { display: none; }  
+        .tab-content.active { display: block; }  
+        @media (max-width: 768px) { .results-container { grid-template-columns: 1fr; } .controls { flex-direction: column; } }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <header>  
+            <h1>星球大战角色数据获取工具</h1>  
+            <div class="subtitle">使用TMDB API获取星球大战系列电影和角色数据</div>  
+        </header>  
+          
+        <div class="api-input-section">  
+            <!-- 新增：基础URL配置，方便切换镜像或代理 -->  
+            <div class="input-group">  
+                <label for="api-base">API 基础地址 (Base URL)：</label>  
+                <input type="text" id="api-base" value="https://api.themoviedb.org" placeholder="如果你在中国大陆，可能需要替换为镜像地址">  
+                <div style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">提示: 默认地址在中国大陆通常无法访问，请使用VPN或更换为镜像地址。</div>  
+            </div>  
+  
+            <div class="input-group">  
+                <label for="api-key">TMDB API密钥：</label>  
+                <!-- 移除了默认的无效Key，建议用户输入自己的 -->  
+                <input type="text" id="api-key" placeholder="输入您的 TMDB API 密钥 (Bearer Token 或 API Key)" value="">  
+            </div>  
+              
+            <div class="controls">  
+                <button id="btn-get-movies">获取星球大战电影</button>  
+                <button id="btn-get-characters">获取所有角色</button>  
+                <button id="btn-export">导出数据</button>  
+            </div>  
+              
+            <div class="status-bar">  
+                <div class="stats">  
+                    <div class="stat-item">  
+                        <div class="stat-value" id="movie-count">0</div>  
+                        <div class="stat-label">电影数量</div>  
+                    </div>  
+                    <div class="stat-item">  
+                        <div class="stat-value" id="character-count">0</div>  
+                        <div class="stat-label">角色数量</div>  
+                    </div>  
+                    <div class="stat-item">  
+                        <div class="stat-value" id="actor-count">0</div>  
+                        <div class="stat-label">演员数量</div>  
+                    </div>  
+                </div>  
+                <div id="status-message">就绪</div>  
+            </div>  
+        </div>  
+          
+        <div class="tab-container">  
+            <div class="tabs">  
+                <button class="tab active" data-tab="movies">电影列表</button>  
+                <button class="tab" data-tab="characters">角色数据</button>  
+                <button class="tab" data-tab="raw">原始数据</button>  
+            </div>  
+              
+            <div class="tab-content active" id="movies-content">  
+                <div class="results-panel">  
+                    <div class="results-title">星球大战系列电影</div>  
+                    <div id="movies-results">  
+                        <div class="loading" id="movies-loading">请先配置API Key并点击"获取星球大战电影"</div>  
+                    </div>  
+                </div>  
+            </div>  
+              
+            <div class="tab-content" id="characters-content">  
+                <div class="results-panel">  
+                    <div class="results-title">角色列表</div>  
+                    <div id="characters-results">  
+                        <div class="loading" id="characters-loading">等待数据...</div>  
+                    </div>  
+                </div>  
+            </div>  
+              
+            <div class="tab-content" id="raw-content">  
+                <div class="results-panel">  
+                    <div class="results-title">原始API数据</div>  
+                    <pre id="raw-data">{"message": "数据将在这里显示"}</pre>  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
+  
+    <script>  
+        // 应用状态  
+        let starWarsMovies = [];  
+        let allCharacters = new Map();  
+        let apiKey = '';  
+        let apiBaseUrl = '';  
+  
+        // 星球大战系列电影ID  
+        const STAR_WARS_MOVIE_IDS = [  
+            11, 1891, 1892, 1893, 1894, 1895, 140607, 181808, 181812, 330459, 348350  
+        ];  
+          
+        document.addEventListener('DOMContentLoaded', function() {  
+            setupEventListeners();  
+            setupTabs();  
+        });  
+          
+        function setupEventListeners() {  
+            document.getElementById('btn-get-movies').addEventListener('click', fetchStarWarsMovies);  
+            document.getElementById('btn-get-characters').addEventListener('click', fetchAllCharacters);  
+            document.getElementById('btn-export').addEventListener('click', exportData);  
+        }  
+          
+        function setupTabs() {  
+            const tabs = document.querySelectorAll('.tab');  
+            tabs.forEach(tab => {  
+                tab.addEventListener('click', function() {  
+                    tabs.forEach(t => t.classList.remove('active'));  
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));  
+                    this.classList.add('active');  
+                    const tabId = this.getAttribute('data-tab');  
+                    document.getElementById(`${tabId}-content`).classList.add('active');  
+                });  
+            });  
+        }  
+          
+        function updateStatus(message, isError = false) {  
+            const statusEl = document.getElementById('status-message');  
+            statusEl.textContent = message;  
+            statusEl.style.color = isError ? '#ff3333' : '#ffe81f';  
+            document.getElementById('movie-count').textContent = starWarsMovies.length;  
+            document.getElementById('character-count').textContent = allCharacters.size;  
+              
+            const uniqueActors = new Set();  
+            allCharacters.forEach(char => {  
+                if (char.actor) uniqueActors.add(char.actor);  
+            });  
+            document.getElementById('actor-count').textContent = uniqueActors.size;  
+        }  
+          
+        async function fetchStarWarsMovies() {  
+            // 获取用户输入的配置  
+            apiKey = document.getElementById('api-key').value.trim();  
+            // 移除末尾的斜杠（如果有）  
+            apiBaseUrl = document.getElementById('api-base').value.trim().replace(/\/$/, "");   
+  
+            if (!apiKey) {  
+                alert('请输入TMDB API密钥');  
+                return;  
+            }  
+            if (!apiBaseUrl) {  
+                alert('请输入API基础地址');  
+                return;  
+            }  
+              
+            updateStatus('正在连接 TMDB API 获取数据...');  
+              
+            const moviesResults = document.getElementById('movies-results');  
+            moviesResults.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载电影数据...<br><small>如果长时间无反应，请检查网络连接或代理设置</small></div>';  
+              
+            try {  
+                starWarsMovies = [];  
+                allCharacters.clear();  
+                  
+                for (const movieId of STAR_WARS_MOVIE_IDS) {  
+                    // 修正：使用动态配置的 apiBaseUrl  
+                    const movieUrl = `$${apiBaseUrl}/3/movie/$${movieId}?api_key=${apiKey}&language=zh-CN&append_to_response=credits`;  
+                      
+                    console.log(`Requesting: ${movieUrl}`); // Debug log  
+  
+                    // 增加 fetch 的配置，允许跨域（虽然 TMDB 默认允许，但明确一下更好）  
+                    const response = await fetch(movieUrl, {  
+                        method: 'GET',  
+                        headers: {  
+                            'Accept': 'application/json'  
+                        }  
+                    });  
+  
+                    if (!response.ok) {  
+                        // 区分 401/404 等错误  
+                        if (response.status === 401) {  
+                            throw new Error("API Key 无效或未授权 (401)");  
+                        } else if (response.status === 404) {  
+                            throw new Error(`找不到电影 ID: ${movieId} (404)`);  
+                        } else {  
+                            throw new Error(`HTTP错误! 状态: ${response.status}`);  
+                        }  
+                    }  
+                      
+                    const movieData = await response.json();  
+                      
+                    const movieInfo = {  
+                        id: movieData.id,  
+                        title: movieData.title,  
+                        original_title: movieData.original_title,  
+                        release_date: movieData.release_date,  
+                        overview: movieData.overview,  
+                        poster_path: movieData.poster_path,  
+                        credits: movieData.credits  
+                    };  
+                      
+                    starWarsMovies.push(movieInfo);  
+                    updateMoviesDisplay();  
+                      
+                    // 稍微增加延迟，防止触发 API 频率限制  
+                    await new Promise(resolve => setTimeout(resolve, 300));  
+                }  
+                  
+                updateStatus(`成功获取 ${starWarsMovies.length} 部星球大战电影`);  
+                  
+            } catch (error) {  
+                console.error('获取电影数据时出错:', error);  
+                let errorMsg = error.message;  
+                  
+                // 针对 Failed to fetch 提供更友好的提示  
+                if (errorMsg.includes("Failed to fetch")) {  
+                    errorMsg = "无法连接到服务器。请检查：1.是否开启了VPN？2.API地址是否被墙？";  
+                }  
+  
+                updateStatus(`错误: ${errorMsg}`, true);  
+                moviesResults.innerHTML = `  
+                    <div class="error">  
+                        <strong>获取数据失败</strong><br>  
+                        详情: ${errorMsg}<br>  
+                        建议: 尝试更换 API Base URL 或检查网络代理。  
+                    </div>`;  
+            }  
+        }  
+          
+        function updateMoviesDisplay() {  
+            const moviesResults = document.getElementById('movies-results');  
+            if (starWarsMovies.length === 0) {  
+                moviesResults.innerHTML = '<div class="loading">暂无电影数据</div>';  
+                return;  
+            }  
+            moviesResults.innerHTML = starWarsMovies.map(movie => `  
+                <div class="movie-item">  
+                    <div class="movie-title">$${movie.title} ($${movie.release_date?.substring(0,4) || '未知年份'})</div>  
+                    <div class="movie-info">原始片名: ${movie.original_title}</div>  
+                    <div class="movie-info">TMDB ID: ${movie.id}</div>  
+                    <div class="movie-info">演员数量: ${movie.credits?.cast?.length || 0}</div>  
+                    <p style="margin-top: 10px; color: #ccccff; font-size: 0.9rem;">${movie.overview || '暂无简介'}</p>  
+                </div>  
+            `).join('');  
+        }  
+          
+        async function fetchAllCharacters() {  
+            if (starWarsMovies.length === 0) {  
+                alert('请先获取电影数据');  
+                return;  
+            }  
+              
+            updateStatus('正在提取角色数据...');  
+            const charactersResults = document.getElementById('characters-results');  
+            charactersResults.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 正在提取角色数据...</div>';  
+              
+            try {  
+                allCharacters.clear();  
+                  
+                for (const movie of starWarsMovies) {  
+                    if (!movie.credits || !movie.credits.cast) continue;  
+                    const mainCast = movie.credits.cast.slice(0, 20);  
+                      
+                    for (const castMember of mainCast) {  
+                        const characterId = `char_$${castMember.id}_$${movie.id}`;  
+                        let characterName = castMember.character;  
+                        characterName = characterName.replace(/$$$[^)]*$$$/g, '').trim();  
+                          
+                        if (!allCharacters.has(characterId)) {  
+                            allCharacters.set(characterId, {  
+                                id: castMember.id,  
+                                name: characterName,  
+                                actor: castMember.name,  
+                                actor_id: castMember.id,  
+                                popularity: castMember.popularity,  
+                                profile_path: castMember.profile_path,  
+                                movies: [{  
+                                    id: movie.id,  
+                                    title: movie.title,  
+                                    year: movie.release_date?.substring(0,4),  
+                                    character: castMember.character  
+                                }]  
+                            });  
+                        } else {  
+                            const existingChar = allCharacters.get(characterId);  
+                            existingChar.movies.push({  
+                                id: movie.id,  
+                                title: movie.title,  
+                                year: movie.release_date?.substring(0,4),  
+                                character: castMember.character  
+                            });  
+                        }  
+                    }  
+                    updateCharactersDisplay();  
+                }  
+                  
+                const sortedCharacters = Array.from(allCharacters.values())  
+                    .sort((a, b) => b.popularity - a.popularity);  
+                  
+                allCharacters.clear();  
+                sortedCharacters.forEach((char, index) => {  
+                    char.rank = index + 1;  
+                    allCharacters.set(`char_$${char.id}_$${index}`, char);  
+                });  
+                  
+                updateStatus(`成功提取 ${allCharacters.size} 个角色`);  
+                  
+            } catch (error) {  
+                console.error('提取角色数据时出错:', error);  
+                updateStatus(`错误: ${error.message}`, true);  
+                charactersResults.innerHTML = `<div class="error">提取角色数据时出错: ${error.message}</div>`;  
+            }  
+        }  
+          
+        function updateCharactersDisplay() {  
+            const charactersResults = document.getElementById('characters-results');  
+            if (allCharacters.size === 0) {  
+                charactersResults.innerHTML = '<div class="loading">暂无角色数据</div>';  
+                return;  
+            }  
+            const displayCharacters = Array.from(allCharacters.values()).slice(0, 50);  
+            charactersResults.innerHTML = displayCharacters.map(char => `  
+                <div class="character-item">  
+                    <div class="character-name">${char.name}</div>  
+                    <div class="character-actor">演员: ${char.actor}</div>  
+                    <div class="movie-info">出现电影: ${char.movies.map(m => m.title).join(', ')}</div>  
+                    <div class="movie-info">流行度: ${char.popularity ? char.popularity.toFixed(2) : 'N/A'}</div>  
+                </div>  
+            `).join('');  
+        }  
+          
+        function exportData() {  
+            if (allCharacters.size === 0) {  
+                alert('请先获取角色数据');  
+                return;  
+            }  
+            const exportData = {  
+                metadata: {  
+                    generated_at: new Date().toISOString(),  
+                    source: "TMDB API"  
+                },  
+                movies: starWarsMovies.map(movie => ({  
+                    title: movie.title,  
+                    year: movie.release_date?.substring(0,4)  
+                })),  
+                characters: Array.from(allCharacters.values())  
+            };  
+              
+            document.getElementById('raw-data').textContent = JSON.stringify(exportData, null, 2);  
+              
+            const dataStr = JSON.stringify(exportData, null, 2);  
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });  
+            const url = URL.createObjectURL(dataBlob);  
+              
+            const link = document.createElement('a');  
+            link.href = url;  
+            link.download = `star_wars_data.json`;  
+            document.body.appendChild(link);  
+            link.click();  
+            document.body.removeChild(link);  
+        }  
+    </script>  
+</body>  
+</html>  

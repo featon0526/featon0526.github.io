@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 手势识别与粒子控制</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Segoe UI', sans-serif; }
+        
+        /* 视频反馈 (左下角) */
+        .input_video {
+            position: absolute; bottom: 20px; left: 20px; z-index: 10;
+            width: 160px; border-radius: 8px; opacity: 0.6;
+            transform: scaleX(-1); /* 镜像翻转 */
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* 核心 HUD 显示区域 */
+        #gesture-hud {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; pointer-events: none; z-index: 20;
+            mix-blend-mode: screen;
+        }
+        
+        /* 数字/意义显示 */
+        #hud-result {
+            font-size: 120px; font-weight: 900; color: rgba(255,255,255,0.9);
+            text-shadow: 0 0 30px #00d2ff, 0 0 60px #00d2ff;
+            letter-spacing: 5px; margin: 0;
+            transition: all 0.2s;
+        }
+        
+        /* 辅助说明 */
+        #hud-desc {
+            font-size: 24px; color: rgba(255,255,255,0.7);
+            text-transform: uppercase; letter-spacing: 3px;
+            margin-top: -10px;
+        }
+
+        /* UI 面板 */
+        #ui-container {
+            position: absolute; top: 20px; right: 20px; color: white;
+            background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px;
+        }
+
+        #loading {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: black; display:flex; align-items:center; justify-content:center;
+            color: #00d2ff; z-index: 100; font-size: 20px;
+        }
+    </style>
+    
+    <!-- 引入依赖 -->
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div id="loading">🧠 正在加载 AI 神经网络...</div>
+    <video class="input_video"></video>
+    
+    <div id="canvas-container"></div>
+
+    <!-- HUD 显示层 -->
+    <div id="gesture-hud">
+        <h1 id="hud-result">--</h1>
+        <p id="hud-desc">等待手势</p>
+    </div>
+
+    <div id="ui-container">
+        <div>支持手势：数字0-5, OK, Rock</div>
+    </div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ================= 配置 =================
+const CONFIG = {
+    particleCount: 10000,
+    color: new THREE.Color(0x00d2ff),
+    activeGesture: 'NONE'
+};
+
+// DOM
+const hudResult = document.getElementById('hud-result');
+const hudDesc = document.getElementById('hud-desc');
+const loading = document.getElementById('loading');
+
+// Three.js 全局
+let scene, camera, renderer, composer, particles;
+let targetPositions = [];
+let originalPositions = [];
+
+// ================= 1. 手势识别逻辑 (核心算法) =================
+
+function detectGesture(landmarks) {
+    // 关键点索引: 
+    // 拇指: 4(Tip), 2(MCP) | 食指: 8(Tip), 6(PIP) | 中指: 12, 10 | 无名: 16, 14 | 小指: 20, 18
+    
+    const fingerTips = [8, 12, 16, 20];
+    const fingerPips = [6, 10, 14, 18];
+    
+    // 1. 判断手指是否伸直 (0: 弯曲, 1: 伸直)
+    let fingersUp = [0, 0, 0, 0, 0]; // 拇指, 食指, 中指, 无名, 小指
+
+    // 拇指逻辑 (比较 Tip.x 和 IP.x，根据左右手会有不同，简化为距离判断)
+    // 如果拇指尖(4) 到 小指根(17) 的距离 > 拇指节(3) 到 小指根(17) 的距离，视为张开
+    const distThumbTip = getDist(landmarks[4], landmarks[17]);
+    const distThumbIp = getDist(landmarks[3], landmarks[17]);
+    if (distThumbTip > distThumbIp * 1.2) fingersUp[0] = 1;
+
+    // 其他四指逻辑 (比较 Y 坐标，Y越小越靠上)
+    for (let i = 0; i < 4; i++) {
+        if (landmarks[fingerTips[i]].y < landmarks[fingerPips[i]].y) {
+            fingersUp[i+1] = 1;
+        }
+    }
+
+    const count = fingersUp.reduce((a, b) => a + b, 0);
+
+    // 2. 特殊手势判断
+    
+    // 🟢 判断 OK 手势 (拇指尖和食指尖距离很近，且其他三指伸直)
+    const distThumbIndex = getDist(landmarks[4], landmarks[8]);
+    if (distThumbIndex < 0.05 && fingersUp[2] && fingersUp[3] && fingersUp[4]) {
+        return { text: "OK", desc: "确认/运行", color: "#00ff00", type: "OK" };
+    }
+
+    // 🟢 判断 Rock/Spider-man (食指+小指+拇指伸直，中指无名指弯曲)
+    if (fingersUp[1] && fingersUp[4] && !fingersUp[2] && !fingersUp[3]) {
+        return { text: "🤘", desc: "ROCK ON", color: "#ff0055", type: "ROCK" };
+    }
+
+    // 🟢 判断 Victory/剪刀手 (食指+中指)
+    if (count === 2 && fingersUp[1] && fingersUp[2]) {
+        return { text: "2", desc: "VICTORY", color: "#ffff00", type: "NUMBER" };
+    }
+    
+    // 🟢 判断 数字 6 (拇指+小指) - 中式数字
+    if (count === 2 && fingersUp[0] && fingersUp[4]) {
+        return { text: "6", desc: "CALL ME", color: "#ffaa00", type: "NUMBER" };
+    }
+
+    // 🟢 普通数字
+    if (count === 0) return { text: "0", desc: "FIST / 拳头", color: "#555555", type: "NUMBER" };
+    if (count === 1) return { text: "1", desc: "ONE", color: "#00d2ff", type: "NUMBER" };
+    if (count === 3) return { text: "3", desc: "THREE", color: "#00d2ff", type: "NUMBER" };
+    if (count === 4) return { text: "4", desc: "FOUR", color: "#00d2ff", type: "NUMBER" };
+    if (count === 5) return { text: "5", desc: "PALM / 停止", color: "#ffffff", type: "NUMBER" };
+
+    return { text: "--", desc: "...", color: "#444", type: "NONE" };
+}
+
+// 计算两点欧几里得距离
+function getDist(p1, p2) {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+// ================= 2. MediaPipe 初始化 =================
+
+function initAI() {
+    const video = document.getElementsByClassName('input_video')[0];
+    const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+    
+    hands.setOptions({
+        maxNumHands: 1, // 单手模式更精准
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.5
+    });
+
+    hands.onResults(onResults);
+
+    const cameraUtils = new Camera(video, {
+        onFrame: async () => { await hands.send({image: video}); },
+        width: 640, height: 480
+    });
+    
+    cameraUtils.start().then(() => {
+        loading.style.display = 'none';
+    });
+}
+
+function onResults(results) {
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        
+        // 获取识别结果
+        const result = detectGesture(landmarks);
+        
+        // 更新 UI
+        if (CONFIG.activeGesture !== result.text) {
+            CONFIG.activeGesture = result.text;
+            hudResult.innerText = result.text;
+            hudResult.style.textShadow = `0 0 30px ${result.color}, 0 0 80px ${result.color}`;
+            hudResult.style.color = result.color;
+            hudDesc.innerText = result.desc;
+            
+            // 触发粒子特效变化
+            triggerParticleEffect(result.type, result.text);
+        }
+    }
+}
+
+// ================= 3. Three.js 3D 粒子系统 =================
+
+function initThree() {
+    const container = document.getElementById('canvas-container');
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, 0.02);
+    
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.z = 40;
+
+    renderer = new THREE.WebGLRenderer({alpha:true, antialias:false});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // Bloom
+    const renderScene = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.strength = 2.0; bloomPass.radius = 0.5; bloomPass.threshold = 0;
+    
+    composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+
+    // Particles
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(CONFIG.particleCount * 3);
+    for(let i=0; i<CONFIG.particleCount*3; i++) positions[i] = (Math.random()-0.5)*50;
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    originalPositions = positions.slice(); // 备份
+    targetPositions = positions.slice();   // 目标
+
+    const material = new THREE.PointsMaterial({
+        color: CONFIG.color,
+        size: 0.5,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        opacity: 0.8
+    });
+
+    particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    animate();
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+    });
+}
+
+// 根据手势改变粒子形态
+function triggerParticleEffect(type, val) {
+    const count = CONFIG.particleCount;
+    const pos = new Float32Array(count * 3);
+
+    for(let i=0; i<count; i++) {
+        const u = Math.random(); const v = Math.random();
+        let x, y, z;
+
+        if (val === '0') { // 拳头：聚集成球
+            const r = 8 * Math.cbrt(Math.random());
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2*Math.random()-1);
+            x = r * Math.sin(phi) * Math.cos(theta);
+            y = r * Math.sin(phi) * Math.sin(theta);
+            z = r * Math.cos(phi);
+            particles.material.color.setHex(0x555555);
+        }
+        else if (val === '5') { // 手掌：炸开/大范围散布
+            x = (Math.random()-0.5) * 80;
+            y = (Math.random()-0.5) * 80;
+            z = (Math.random()-0.5) * 50;
+            particles.material.color.setHex(0xffffff);
+        }
+        else if (type === 'OK') { // 圆环
+            const r = 15;
+            const t = u * Math.PI * 2;
+            x = (r + (Math.random()-0.5)*2) * Math.cos(t);
+            y = (r + (Math.random()-0.5)*2) * Math.sin(t);
+            z = (Math.random()-0.5) * 5;
+            particles.material.color.setHex(0x00ff00);
+        }
+        else if (val === '1') { // 竖线
+            x = (Math.random()-0.5) * 4;
+            y = (Math.random()-0.5) * 30;
+            z = (Math.random()-0.5) * 4;
+            particles.material.color.setHex(0x00d2ff);
+        }
+        else if (type === 'ROCK') { // 混乱/能量
+             const r = 20 * u;
+             const t = v * Math.PI * 2 * 5;
+             x = r * Math.cos(t);
+             y = r * Math.sin(t); // 螺旋
+             z = (Math.random()-0.5) * 20;
+             particles.material.color.setHex(0xff0055);
+        }
+        else { // 默认：立方体
+             const s = 20;
+             x = (Math.random()-0.5)*s; y=(Math.random()-0.5)*s; z=(Math.random()-0.5)*s;
+             particles.material.color.set(CONFIG.color);
+        }
+
+        targetPositions[i*3] = x;
+        targetPositions[i*3+1] = y;
+        targetPositions[i*3+2] = z;
+    }
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    const positions = particles.geometry.attributes.position.array;
+    
+    // 粒子飞向目标位置 (Lerp)
+    for(let i=0; i<CONFIG.particleCount*3; i++) {
+        positions[i] += (targetPositions[i] - positions[i]) * 0.05;
+    }
+    
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.rotation.y += 0.002;
+    
+    composer.render();
+}
+
+// 启动
+initThree();
+initAI();
+
+</script>
+</body>
+</html>

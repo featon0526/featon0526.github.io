@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红楼梦人物关系图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #chart {
+            flex: 1;
+            width: 100%;
+        }
+        
+        .controls {
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        select, input {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+        }
+        
+        .info {
+            margin-left: auto;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .highlight {
+            color: #c23531;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="controls">
+            <div class="control-group">
+                <label for="weightType">权重类型:</label>
+                <select id="weightType">
+                    <option value="chapweight">章节共现 (chapweight)</option>
+                    <option value="duanweight">段落共现 (duanweight)</option>
+                    <option value="total">总权重 (chap+duan)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="minWeight">最小权重:</label>
+                <input type="range" id="minWeight" min="0" max="500" value="10" step="5">
+                <span id="minWeightValue">10</span>
+            </div>
+            
+            <div class="control-group">
+                <label for="layout">布局:</label>
+                <select id="layout">
+                    <option value="circular">环形布局</option>
+                    <option value="force">力导向布局</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="nodeSize">节点大小:</label>
+                <input type="range" id="nodeSize" min="5" max="50" value="20" step="1">
+                <span id="nodeSizeValue">20</span>
+            </div>
+            
+            <button id="resetBtn">重置视图</button>
+            
+            <div class="info">
+                当前显示: <span id="currentCount">0</span> 个节点, <span id="currentLinks">0</span> 条关系
+            </div>
+        </div>
+        
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        // 初始化ECharts实例
+        const chartDom = document.getElementById('chart');
+        const myChart = echarts.init(chartDom);
+        
+        // 存储原始数据和处理后的数据
+        let originalData = [];
+        let processedGraph = null;
+        
+        // 权重类型映射
+        const weightTypeMap = {
+            'chapweight': '章节共现',
+            'duanweight': '段落共现',
+            'total': '总权重'
+        };
+        
+        // 颜色配置
+        const categoryColors = [
+            '#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae',
+            '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570',
+            '#c4ccd3', '#f05b72', '#ef5b9c', '#f47920', '#905a3d',
+            '#fab27b', '#2a5caa', '#444693', '#726930', '#b2d235',
+            '#6d8346', '#ac6767', '#1d953f', '#6950a1', '#918597'
+        ];
+        
+        // 解析CSV数据
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',');
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.split(',');
+                const row = {};
+                
+                for (let j = 0; j < headers.length; j++) {
+                    let value = values[j];
+                    // 解析数值类型
+                    if (headers[j] === 'chapweight' || headers[j] === 'duanweight') {
+                        value = parseFloat(value);
+                    }
+                    row[headers[j]] = value;
+                }
+                
+                data.push(row);
+            }
+            
+            return data;
+        }
+        
+        // 根据CSV数据构建图数据
+        function buildGraphData(csvData, weightType = 'chapweight', minWeight = 10) {
+            // 收集所有人物
+            const characters = new Set();
+            const linksMap = new Map(); // 用于去重和合并双向关系
+            
+            csvData.forEach(row => {
+                const source = row.First;
+                const target = row.Second;
+                
+                // 确保权重有效
+                let weight = 0;
+                if (weightType === 'total') {
+                    weight = (row.chapweight || 0) + (row.duanweight || 0);
+                } else {
+                    weight = row[weightType] || 0;
+                }
+                
+                // 过滤低于最小权重的边
+                if (weight < minWeight) return;
+                
+                // 添加人物
+                characters.add(source);
+                characters.add(target);
+                
+                // 创建边的键（确保顺序一致）
+                const linkKey = source < target ? `${source}|${target}` : `${target}|${source}`;
+                
+                // 如果边已存在，取权重较大者
+                if (linksMap.has(linkKey)) {
+                    const existingWeight = linksMap.get(linkKey);
+                    if (weight > existingWeight) {
+                        linksMap.set(linkKey, weight);
+                    }
+                } else {
+                    linksMap.set(linkKey, weight);
+                }
+            });
+            
+            // 构建节点数据
+            const nodes = Array.from(characters).map((character, index) => {
+                // 计算节点的度（连接数）和总权重
+                let degree = 0;
+                let totalWeight = 0;
+                
+                linksMap.forEach((weight, key) => {
+                    const [source, target] = key.split('|');
+                    if (source === character || target === character) {
+                        degree++;
+                        totalWeight += weight;
+                    }
+                });
+                
+                // 确定节点大小（基于度和权重）
+                const baseSize = 10 + Math.min(40, Math.sqrt(totalWeight) / 2);
+                
+                // 为人物分类（简化分类，实际可根据人物属性细分）
+                let category = 0; // 默认分类
+                
+                // 简单分类逻辑（可根据需要扩展）
+                if (character.includes('宝玉') || character.includes('黛玉') || character.includes('宝钗')) {
+                    category = 0; // 主要角色
+                } else if (character.includes('贾') && !character.includes('贾宝玉')) {
+                    category = 1; // 贾府男性
+                } else if (character.includes('王') || character.includes('薛')) {
+                    category = 2; // 王/薛家
+                } else if (character.includes('丫') || character.includes('儿') || character.includes('姐')) {
+                    category = 3; // 丫鬟/侍女
+                } else if (character.includes('老') || character.includes('太') || character.includes('爷')) {
+                    category = 4; // 长辈/老爷
+                } else {
+                    category = 5; // 其他
+                }
+                
+                return {
+                    id: character,
+                    name: character,
+                    symbolSize: baseSize,
+                    value: totalWeight,
+                    degree: degree,
+                    category: category,
+                    itemStyle: {
+                        color: categoryColors[category % categoryColors.length]
+                    }
+                };
+            });
+            
+            // 构建边数据
+            const links = [];
+            linksMap.forEach((weight, key) => {
+                const [source, target] = key.split('|');
+                
+                // 根据权重确定线条宽度
+                const lineWidth = Math.max(0.5, Math.min(5, weight / 50));
+                
+                // 根据权重确定线条颜色深度
+                const opacity = Math.min(0.9, 0.3 + weight / 200);
+                
+                links.push({
+                    source: source,
+                    target: target,
+                    value: weight,
+                    lineStyle: {
+                        width: lineWidth,
+                        opacity: opacity
+                    }
+                });
+            });
+            
+            // 创建分类
+            const categories = [
+                { name: '主要角色' },
+                { name: '贾府男性' },
+                { name: '王/薛家' },
+                { name: '丫鬟/侍女' },
+                { name: '长辈/老爷' },
+                { name: '其他人物' }
+            ];
+            
+            return {
+                nodes: nodes,
+                links: links,
+                categories: categories
+            };
+        }
+        
+        // 更新图表
+        function updateChart(weightType = 'chapweight', minWeight = 10, layoutType = 'circular') {
+            if (!originalData.length) return;
+            
+            // 处理数据
+            processedGraph = buildGraphData(originalData, weightType, minWeight);
+            
+            // 更新信息显示
+            document.getElementById('currentCount').textContent = processedGraph.nodes.length;
+            document.getElementById('currentLinks').textContent = processedGraph.links.length;
+            
+            // 配置选项
+            const option = {
+                title: {
+                    text: `《红楼梦》人物关系图`,
+                    subtext: `权重类型: ${weightTypeMap[weightType]} | 最小权重: ${minWeight} | 共 ${processedGraph.nodes.length} 个人物，${processedGraph.links.length} 条关系`,
+                    left: 'center',
+                    top: 10,
+                    textStyle: {
+                        fontSize: 18,
+                        color: '#333'
+                    },
+                    subtextStyle: {
+                        fontSize: 14,
+                        color: '#666'
+                    }
+                },
+                tooltip: {
+                    formatter: function(params) {
+                        if (params.dataType === 'node') {
+                            const node = params.data;
+                            return `
+                                <div style="font-weight:bold; margin-bottom:5px;">${node.name}</div>
+                                <div>连接数: ${node.degree}</div>
+                                <div>总权重: ${node.value.toFixed(1)}</div>
+                            `;
+                        } else if (params.dataType === 'edge') {
+                            const link = params.data;
+                            return `
+                                <div style="font-weight:bold; margin-bottom:5px;">${link.source} ↔ ${link.target}</div>
+                                <div>权重: ${link.value.toFixed(1)}</div>
+                            `;
+                        }
+                        return params.name;
+                    }
+                },
+                legend: {
+                    data: processedGraph.categories.map(function(cat) {
+                        return cat.name;
+                    }),
+                    top: 60,
+                    left: 'center',
+                    itemWidth: 20,
+                    itemHeight: 14,
+                    textStyle: {
+                        fontSize: 12
+                    }
+                },
+                animationDuration: 1500,
+                animationEasingUpdate: 'quinticInOut',
+                series: [
+                    {
+                        name: '红楼梦人物',
+                        type: 'graph',
+                        layout: layoutType,
+                        data: processedGraph.nodes,
+                        links: processedGraph.links,
+                        categories: processedGraph.categories,
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{b}',
+                            fontSize: 12
+                        },
+                        edgeLabel: {
+                            show: false
+                        },
+                        lineStyle: {
+                            color: 'source',
+                            curveness: layoutType === 'force' ? 0 : 0.3,
+                            opacity: 0.6
+                        },
+                        emphasis: {
+                            focus: 'adjacency',
+                            lineStyle: {
+                                width: 3
+                            }
+                        },
+                        force: layoutType === 'force' ? {
+                            repulsion: 200,
+                            edgeLength: [30, 150]
+                        } : undefined,
+                        circular: layoutType === 'circular' ? {
+                            rotateLabel: true
+                        } : undefined
+                    }
+                ]
+            };
+            
+            // 设置选项
+            myChart.setOption(option, true);
+        }
+        
+        // 加载CSV数据
+        function loadCSVData() {
+            // 直接从页面中获取CSV数据（已在HTML中嵌入）
+            const csvText = `First,Second,chapweight,duanweight
+宝玉,贾母,98.0,324.0
+宝玉,凤姐,92.0,187.0
+宝玉,袭人,88.0,336.0
+宝玉,王夫人,103.0,296.0
+宝玉,宝钗,96.0,295.0
+宝玉,贾政,67.0,170.0
+宝玉,贾琏,69.0,72.0
+宝玉,平儿,69.0,63.0
+宝玉,薛姨妈,59.0,102.0
+宝玉,探春,60.0,111.0
+宝玉,紫鹃,46.0,103.0
+宝玉,鸳鸯,51.0,71.0
+宝玉,贾珍,48.0,51.0
+宝玉,李纨,56.0,116.0
+宝玉,尤氏,45.0,53.0
+宝玉,晴雯,44.0,122.0
+宝玉,刘姥姥,10.0,17.0
+宝玉,邢夫人,49.0,58.0
+宝玉,薛蟠,29.0,32.0
+宝玉,林黛玉,43.0,123.0
+宝玉,香菱,31.0,36.0
+宝玉,麝月,45.0,100.0
+宝玉,贾蓉,36.0,33.0
+宝玉,贾赦,36.0,40.0
+宝玉,惜春,51.0,53.0
+宝玉,贾芸,15.0,23.0
+宝玉,周瑞家的,15.0,8.0
+宝玉,芳官,13.0,38.0
+宝玉,贾环,33.0,49.0
+宝玉,妙玉,18.0,22.0
+宝玉,雪雁,22.0,38.0
+宝玉,迎春,44.0,51.0
+宝玉,赵姨娘,30.0,29.0
+宝玉,莺儿,26.0,36.0
+宝玉,宝蟾,5.0,0.0
+宝玉,秦钟,12.0,40.0
+宝玉,巧姐,17.0,18.0
+宝玉,薛蝌,15.0,6.0
+宝玉,秋纹,33.0,43.0
+宝玉,贾兰,24.0,42.0
+宝玉,尤二姐,11.0,5.0
+宝玉,茗烟,15.0,30.0
+宝玉,史湘云,27.0,49.0
+宝玉,大了,50.0,38.0
+宝玉,林之孝家的,15.0,7.0
+宝玉,司棋,15.0,10.0
+宝玉,五儿,14.0,20.0
+宝玉,赖大,23.0,16.0
+宝玉,贾瑞,4.0,10.0
+宝玉,贾蔷,12.0,8.0
+宝玉,凤丫头,29.0,21.0
+宝玉,林之孝,16.0,8.0
+宝玉,兴儿,4.0,1.0
+宝玉,焙茗,16.0,27.0
+宝玉,冯紫英,8.0,7.0
+宝玉,琥珀,25.0,20.0
+宝玉,包勇,7.0,3.0
+宝玉,彩云,24.0,23.0
+宝玉,旺儿,10.0,4.0
+宝玉,翠缕,10.0,8.0
+宝玉,门子,22.0,10.0
+宝玉,周瑞,12.0,5.0
+宝玉,丰儿,19.0,5.0
+宝玉,玉钏儿,13.0,17.0
+宝玉,李贵,14.0,24.0
+宝玉,柳家的,7.0,10.0
+宝玉,金钏儿,11.0,16.0
+宝玉,板儿,6.0,3.0
+宝玉,李嬷嬷,7.0,14.0
+宝玉,倪二,2.0,2.0
+宝玉,金荣,3.0,11.0
+宝玉,王仁,9.0,5.0
+宝玉,甄宝玉,4.0,11.0
+宝玉,坠儿,8.0,11.0
+宝玉,鲍二,8.0,0.0
+宝玉,北静王,11.0,10.0
+宝玉,秋桐,7.0,2.0
+宝玉,藕官,5.0,10.0
+宝玉,尤三姐,7.0,5.0
+宝玉,春燕,2.0,7.0
+宝玉,贾芹,7.0,4.0
+宝玉,琏二奶奶,17.0,8.0
+宝玉,彩屏,8.0,4.0
+宝玉,李十儿,2.0,0.0
+宝玉,侍书,3.0,4.0
+宝玉,李纹,7.0,13.0
+宝玉,玻璃,18.0,13.0
+宝玉,王善保家的,3.0,4.0
+宝玉,薛宝钗,17.0,16.0
+宝玉,翠墨,10.0,10.0
+宝玉,张道士,2.0,7.0
+宝玉,彩霞,8.0,7.0
+宝玉,马道婆,2.0,2.0
+宝玉,王太医,8.0,8.0
+宝玉,王子腾,15.0,10.0
+宝玉,柳湘莲,4.0,5.0
+宝玉,蕊官,5.0,8.0
+宝玉,邢岫烟,12.0,12.0
+宝玉,龄官,2.0,2.0
+宝玉,贾敬,7.0,6.0
+宝玉,李绮,8.0,13.0
+宝玉,佩凤,6.0,4.0
+宝玉,入画,9.0,6.0
+宝玉,狗儿,6.0,5.0
+宝玉,贾雨村,10.0,3.0
+宝玉,文官,9.0,5.0
+宝玉,邢大舅,4.0,3.0
+宝玉,绣桔,3.0,1.0
+宝玉,云儿,7.0,10.0
+宝玉,詹光,5.0,3.0
+宝玉,大姐儿,7.0,3.0
+宝玉,李宫裁,8.0,9.0
+宝玉,颦儿,10.0,10.0
+宝玉,贾宝玉,4.0,6.0
+宝玉,焦大,3.0,0.0
+宝玉,水溶,2.0,3.0
+宝玉,王一贴,1.0,4.0
+宝玉,尤老娘,2.0,1.0
+宝玉,元春,12.0,7.0
+宝玉,智能,2.0,5.0
+宝玉,彩明,7.0,3.0
+宝玉,花自芳,4.0,4.0
+宝玉,青儿,3.0,1.0
+宝玉,素云,11.0,7.0
+宝玉,英莲,1.0,0.0
+宝玉,碧痕,8.0,9.0
+宝玉,李婶娘,5.0,6.0
+宝玉,鲍二家的,4.0,1.0
+宝玉,封肃,1.0,0.0
+宝玉,女先儿,4.0,5.0
+宝玉,琪官,3.0,5.0
+宝玉,鹦哥,7.0,5.0
+宝玉,赵嬷嬷,1.0,0.0
+宝玉,赵堂官,2.0,2.0
+宝玉,贾菌,4.0,4.0
+宝玉,空空道人,1.0,0.0
+宝玉,赖大家的,4.0,3.0
+宝玉,赖尚荣,3.0,2.0
+宝玉,王家的,4.0,1.0
+宝玉,旺儿媳妇,3.0,1.0
+宝玉,吴新登,5.0,3.0
+宝玉,俞禄,2.0,0.0
+宝玉,锄药,6.0,6.0
+宝玉,金钏,8.0,6.0
+宝玉,赖嬷嬷,2.0,3.0
+宝玉,秋菱,4.0,1.0
+宝玉,小幺儿,9.0,4.0
+宝玉,周姨娘,7.0,5.0
+贾母,凤姐,84.0,198.0
+贾母,袭人,76.0,95.0
+贾母,王夫人,95.0,276.0
+贾母,宝钗,85.0,133.0
+贾母,贾政,59.0,119.0
+贾母,贾琏,59.0,75.0
+贾母,平儿,59.0,45.0
+贾母,薛姨妈,55.0,116.0
+贾母,探春,52.0,64.0
+贾母,紫鹃,40.0,32.0
+贾母,鸳鸯,48.0,88.0
+贾母,贾珍,42.0,56.0
+贾母,李纨,51.0,73.0
+贾母,尤氏,36.0,61.0
+贾母,晴雯,37.0,23.0
+贾母,刘姥姥,7.0,26.0
+贾母,邢夫人,48.0,80.0
+贾母,薛蟠,28.0,15.0
+贾母,林黛玉,38.0,42.0
+贾母,香菱,29.0,19.0
+贾母,麝月,39.0,19.0
+贾母,贾蓉,29.0,32.0
+贾母,贾赦,30.0,57.0
+贾母,惜春,44.0,33.0
+贾母,贾芸,12.0,7.0
+贾母,周瑞家的,16.0,10.0
+贾母,芳官,9.0,4.0
+贾母,贾环,28.0,20.0
+贾母,妙玉,14.0,7.0
+贾母,雪雁,21.0,15.0
+贾母,迎春,40.0,45.0
+贾母,赵姨娘,24.0,11.0
+贾母,莺儿,21.0,16.0
+贾母,宝蟾,5.0,0.0
+贾母,秦钟,10.0,9.0
+贾母,巧姐,13.0,13.0
+贾母,薛蝌,13.0,7.0
+贾母,秋纹,28.0,14.0
+贾母,贾兰,21.0,18.0
+贾母,尤二姐,8.0,10.0
+贾母,茗烟,12.0,2.0
+贾母,史湘云,23.0,34.0
+贾母,大了,45.0,19.0
+贾母,林之孝家的,13.0,7.0
+贾母,司棋,13.0,5.0
+贾母,五儿,10.0,4.0
+贾母,赖大,21.0,11.0
+贾母,贾瑞,3.0,1.0
+贾母,贾蔷,11.0,4.0
+贾母,凤丫头,27.0,37.0
+贾母,林之孝,14.0,8.0
+贾母,兴儿,3.0,1.0
+贾母,焙茗,13.0,6.0
+贾母,冯紫英,4.0,2.0
+贾母,琥珀,25.0,31.0
+贾母,包勇,6.0,2.0
+贾母,彩云,20.0,13.0
+贾母,旺儿,9.0,3.0
+贾母,翠缕,10.0,3.0
+贾母,门子,19.0,2.0
+贾母,周瑞,12.0,4.0
+贾母,丰儿,18.0,8.0
+贾母,玉钏儿,12.0,6.0
+贾母,李贵,13.0,6.0
+贾母,柳家的,5.0,1.0
+贾母,金钏儿,10.0,6.0
+贾母,板儿,5.0,7.0
+贾母,李嬷嬷,6.0,3.0
+贾母,倪二,2.0,0.0
+贾母,金荣,2.0,0.0
+贾母,王仁,6.0,2.0
+贾母,甄宝玉,2.0,1.0
+贾母,坠儿,5.0,0.0
+贾母,鲍二,7.0,3.0
+贾母,北静王,9.0,5.0
+贾母,秋桐,6.0,3.0
+贾母,藕官,4.0,2.0
+贾母,尤三姐,3.0,1.0
+贾母,春燕,1.0,0.0
+贾母,贾芹,6.0,5.0
+贾母,琏二奶奶,12.0,1.0
+贾母,彩屏,7.0,2.0
+贾母,李十儿,2.0,1.0
+贾母,侍书,3.0,2.0
+贾母,李纹,7.0,8.0
+贾母,玻璃,17.0,5.0
+贾母,王善保家的,3.0,1.0
+贾母,薛宝钗,17.0,11.0
+贾母,翠墨,8.0,3.0
+贾母,张道士,2.0,5.0
+贾母,彩霞,8.0,4.0
+贾母,马道婆,2.0,1.0
+贾母,王太医,8.0,4.0
+贾母,王子腾,17.0,12.0
+贾母,柳湘莲,3.0,3.0
+贾母,蕊官,4.0,2.0
+贾母,邢岫烟,12.0,8.0
+贾母,龄官,2.0,0.0
+贾母,贾敬,5.0,6.0
+贾母,李绮,8.0,7.0
+贾母,佩凤,5.0,4.0
+贾母,入画,8.0,2.0
+贾母,狗儿,4.0,1.0
+贾母,贾雨村,10.0,4.0
+贾母,文官,8.0,8.0
+贾母,邢大舅,4.0,0.0
+贾母,绣桔,3.0,1.0
+贾母,云儿,7.0,3.0
+贾母,詹光,4.0,2.0
+贾母,大姐儿,7.0,7.0
+贾母,李宫裁,7.0,9.0
+贾母,颦儿,9.0,3.0
+贾母,贾宝玉,2.0,0.0
+贾母,焦大,3.0,0.0
+贾母,水溶,1.0,0.0
+贾母,王一贴,1.0,0.0
+贾母,尤老娘,2.0,2.0
+贾母,元春,10.0,9.0
+贾母,智能,2.0,2.0
+贾母,彩明,6.0,1.0
+贾母,花自芳,3.0,0.0
+贾母,青儿,1.0,0.0
+贾母,素云,9.0,3.0
+贾母,英莲,2.0,0.0
+贾母,碧痕,5.0,2.0
+贾母,李婶娘,5.0,5.0
+贾母,鲍二家的,3.0,3.0
+贾母,封肃,0.0,0.0
+贾母,女先儿,3.0,5.0
+贾母,琪官,3.0,1.0
+贾母,鹦哥,7.0,5.0
+贾母,赵嬷嬷,1.0,0.0
+贾母,赵堂官,2.0,1.0
+贾母,贾菌,4.0,3.0
+贾母,空空道人,1.0,0.0
+贾母,赖大家的,3.0,3.0
+贾母,赖尚荣,2.0,1.0
+贾母,王家的,4.0,0.0
+贾母,旺儿媳妇,4.0,2.0
+贾母,吴新登,4.0,2.0
+贾母,俞禄,2.0,1.0
+贾母,锄药,5.0,1.0
+贾母,金钏,8.0,2.0
+贾母,赖嬷嬷,2.0,1.0
+贾母,秋菱,4.0,3.0
+贾母,小幺儿,8.0,3.0
+贾母,周姨娘,5.0,3.0`;
+            
+            originalData = parseCSV(csvText);
+            console.log(`加载了 ${originalData.length} 条关系数据`);
+            
+            // 初始渲染
+            updateChart();
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 权重类型变化
+            document.getElementById('weightType').addEventListener('change', function() {
+                const minWeight = parseInt(document.getElementById('minWeight').value);
+                const layout = document.getElementById('layout').value;
+                updateChart(this.value, minWeight, layout);
+            });
+            
+            // 最小权重变化
+            const minWeightSlider = document.getElementById('minWeight');
+            const minWeightValue = document.getElementById('minWeightValue');
+            
+            minWeightSlider.addEventListener('input', function() {
+                minWeightValue.textContent = this.value;
+            });
+            
+            minWeightSlider.addEventListener('change', function() {
+                const weightType = document.getElementById('weightType').value;
+                const layout = document.getElementById('layout').value;
+                updateChart(weightType, parseInt(this.value), layout);
+            });
+            
+            // 布局变化
+            document.getElementById('layout').addEventListener('change', function() {
+                const weightType = document.getElementById('weightType').value;
+                const minWeight = parseInt(document.getElementById('minWeight').value);
+                updateChart(weightType, minWeight, this.value);
+            });
+            
+            // 节点大小变化
+            const nodeSizeSlider = document.getElementById('nodeSize');
+            const nodeSizeValue = document.getElementById('nodeSizeValue');
+            
+            nodeSizeSlider.addEventListener('input', function() {
+                nodeSizeValue.textContent = this.value;
+                // 这里可以添加节点大小调整逻辑
+            });
+            
+            // 重置按钮
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                myChart.dispatchAction({
+                    type: 'restore'
+                });
+            });
+            
+            // 窗口大小变化时重置图表大小
+            window.addEventListener('resize', function() {
+                myChart.resize();
+            });
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCSVData();
+            bindEvents();
+        });
+    </script>
+</body>
+</html>

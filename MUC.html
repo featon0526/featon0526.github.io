@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影视宇宙关系网 - 漫威电影宇宙角色网络</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #e62429, #ffcc00, #00a8e8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .chart-container {
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .chart-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chart-title i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .chart {
+            height: 600px;
+            width: 100%;
+        }
+        
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .control-section {
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #00a8e8;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+        
+        .movie-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .movie-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .movie-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .movie-item.selected {
+            background: rgba(0, 168, 232, 0.2);
+            border-left: 3px solid #00a8e8;
+        }
+        
+        .movie-checkbox {
+            margin-right: 10px;
+        }
+        
+        .movie-year {
+            color: #ffcc00;
+            font-size: 0.8rem;
+            margin-left: auto;
+            background: rgba(255, 204, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .time-slider {
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        .time-value {
+            text-align: center;
+            color: #ffcc00;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .control-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e6e6e6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-btn.primary {
+            background: linear-gradient(90deg, #e62429, #ff6b6b);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .control-btn.primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(230, 36, 41, 0.4);
+        }
+        
+        .control-btn.secondary {
+            background: linear-gradient(90deg, #00a8e8, #4e54c8);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .control-btn.secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 168, 232, 0.4);
+        }
+        
+        .control-btn.warning {
+            background: linear-gradient(90deg, #ffcc00, #ffde7d);
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+        
+        .control-btn.warning:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+        }
+        
+        .character-info {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .character-info.active {
+            display: block;
+        }
+        
+        .character-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .character-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e62429, #ffcc00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin-right: 20px;
+        }
+        
+        .character-name {
+            font-size: 1.8rem;
+            color: #ffcc00;
+            margin-bottom: 5px;
+        }
+        
+        .character-actor {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+        
+        .character-details {
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            margin-bottom: 10px;
+            display: flex;
+        }
+        
+        .detail-label {
+            width: 100px;
+            color: #00a8e8;
+            font-weight: bold;
+        }
+        
+        .detail-value {
+            flex: 1;
+            color: #e6e6e6;
+        }
+        
+        .movie-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .movie-tag {
+            background: rgba(230, 36, 41, 0.2);
+            color: #ff6b6b;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e6e6e6;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: rgba(230, 36, 41, 0.8);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 600px;
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+        
+        .statistics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-mask"></i> 影视宇宙关系网</h1>
+            <p class="subtitle">探索漫威电影宇宙角色关系网络，可视化角色间的关联与故事线演进</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="main-content">
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <i class="fas fa-project-diagram"></i> 漫威电影宇宙角色关系图
+                    </div>
+                    <div id="network-chart" class="chart">
+                        <div class="loading">初始化角色关系网络...</div>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #e62429;"></div>
+                            <span>核心角色 (出现5+部电影)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #00a8e8;"></div>
+                            <span>重要角色 (出现3-4部电影)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #ffcc00;"></div>
+                            <span>次要角色 (出现1-2部电影)</span>
+                        </div>
+                    </div>
+                    <div class="statistics">
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-nodes">0</div>
+                            <div class="stat-label">角色数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-edges">0</div>
+                            <div class="stat-label">关系数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-movies">0</div>
+                            <div class="stat-label">电影数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avg-degree">0</div>
+                            <div class="stat-label">平均关联度</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <i class="fas fa-film"></i> 漫威电影时间线
+                    </div>
+                    <div id="timeline-chart" class="chart" style="height: 200px;"></div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-filter"></i> 电影筛选
+                    </div>
+                    <div class="filter-options">
+                        <div class="button-group">
+                            <button class="control-btn primary" id="select-all">
+                                <i class="fas fa-check-square"></i> 全选
+                            </button>
+                            <button class="control-btn warning" id="clear-all">
+                                <i class="fas fa-times-circle"></i> 清空
+                            </button>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">选择电影 (共<span id="movie-count">0</span>部):</label>
+                            <div class="movie-list" id="movie-list">
+                                <!-- 电影列表将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-sliders-h"></i> 时间线控制
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label class="filter-label">时间轴: <span id="time-value" class="time-value">2008</span></label>
+                            <input type="range" min="2008" max="2023" value="2023" class="time-slider" id="time-slider">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #a0a0a0;">
+                                <span>2008</span>
+                                <span>2023</span>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button class="control-btn secondary" id="play-timeline">
+                                <i class="fas fa-play"></i> 播放时间线
+                            </button>
+                            <button class="control-btn" id="reset-timeline">
+                                <i class="fas fa-redo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i> 角色社区
+                    </div>
+                    <div class="filter-options">
+                        <div class="button-group">
+                            <button class="control-btn secondary" id="detect-communities">
+                                <i class="fas fa-users-cog"></i> 检测社区
+                            </button>
+                            <button class="control-btn" id="reset-communities">
+                                <i class="fas fa-eye-slash"></i> 隐藏社区
+                            </button>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">已检测到 <span id="community-count">0</span> 个角色社区:</label>
+                            <div class="movie-list" id="community-list">
+                                <!-- 社区列表将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-search"></i> 角色搜索
+                    </div>
+                    <div class="filter-options">
+                        <div class="filter-group">
+                            <label class="filter-label">搜索角色:</label>
+                            <input type="text" id="character-search" placeholder="输入角色名称..." style="
+                                width: 100%;
+                                padding: 10px;
+                                border-radius: 6px;
+                                background: rgba(255, 255, 255, 0.1);
+                                border: 1px solid rgba(255, 255, 255, 0.2);
+                                color: #e6e6e6;
+                                margin-bottom: 10px;
+                            ">
+                        </div>
+                        <div class="button-group">
+                            <button class="control-btn primary" id="highlight-central">
+                                <i class="fas fa-star"></i> 高亮核心角色
+                            </button>
+                            <button class="control-btn" id="reset-network">
+                                <i class="fas fa-sync-alt"></i> 重置视图
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>影视宇宙关系网数据可视化项目 | 数据来源：模拟数据（可替换为TMDB API真实数据）</p>
+            <p>注：本页面展示数据为模拟数据，仅用于演示目的。实际应用中可接入TMDB API获取真实数据</p>
+        </footer>
+    </div>
+    
+    <!-- 角色信息弹窗 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="character-info" id="character-info">
+        <button class="close-btn" id="close-info">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="character-header">
+            <div class="character-avatar" id="character-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <div class="character-name" id="character-name">角色名称</div>
+                <div class="character-actor" id="character-actor">演员姓名</div>
+            </div>
+        </div>
+        <div class="character-details">
+            <div class="detail-item">
+                <div class="detail-label">出现电影:</div>
+                <div class="detail-value">
+                    <div class="movie-tags" id="character-movies">
+                        <!-- 电影标签将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">关联角色:</div>
+                <div class="detail-value">
+                    <div class="movie-tags" id="character-connections">
+                        <!-- 关联角色标签将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">电影数量:</div>
+                <div class="detail-value" id="character-movie-count">0</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">关联度:</div>
+                <div class="detail-value" id="character-degree">0</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">角色类型:</div>
+                <div class="detail-value" id="character-type">次要角色</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MCU模拟数据
+        const mcuData = {
+            movies: [
+                { id: 1, title: "钢铁侠", year: 2008, color: "#e62429" },
+                { id: 2, title: "无敌浩克", year: 2008, color: "#77dd77" },
+                { id: 3, title: "钢铁侠2", year: 2010, color: "#e62429" },
+                { id: 4, title: "雷神", year: 2011, color: "#4e54c8" },
+                { id: 5, title: "美国队长", year: 2011, color: "#00a8e8" },
+                { id: 6, title: "复仇者联盟", year: 2012, color: "#ffcc00" },
+                { id: 7, title: "钢铁侠3", year: 2013, color: "#e62429" },
+                { id: 8, title: "雷神2", year: 2013, color: "#4e54c8" },
+                { id: 9, title: "美国队长2", year: 2014, color: "#00a8e8" },
+                { id: 10, title: "银河护卫队", year: 2014, color: "#ff6b6b" },
+                { id: 11, title: "复仇者联盟2", year: 2015, color: "#ffcc00" },
+                { id: 12, title: "蚁人", year: 2015, color: "#ffa36c" },
+                { id: 13, title: "美国队长3", year: 2016, color: "#00a8e8" },
+                { id: 14, title: "奇异博士", year: 2016, color: "#8f94fb" },
+                { id: 15, title: "银河护卫队2", year: 2017, color: "#ff6b6b" },
+                { id: 16, title: "蜘蛛侠:英雄归来", year: 2017, color: "#e62429" },
+                { id: 17, title: "雷神3", year: 2017, color: "#4e54c8" },
+                { id: 18, title: "黑豹", year: 2018, color: "#000000" },
+                { id: 19, title: "复仇者联盟3", year: 2018, color: "#ffcc00" },
+                { id: 20, title: "蚁人2", year: 2018, color: "#ffa36c" },
+                { id: 21, title: "惊奇队长", year: 2019, color: "#ffde7d" },
+                { id: 22, title: "复仇者联盟4", year: 2019, color: "#ffcc00" },
+                { id: 23, title: "蜘蛛侠:英雄远征", year: 2019, color: "#e62429" }
+            ],
+            
+            characters: [
+                { 
+                    id: 1, 
+                    name: "托尼·斯塔克 / 钢铁侠", 
+                    actor: "小罗伯特·唐尼",
+                    movies: [1, 3, 6, 7, 11, 13, 19, 22],
+                    type: "core", // 核心角色
+                    color: "#e62429",
+                    avatar: "🤖"
+                },
+                { 
+                    id: 2, 
+                    name: "史蒂夫·罗杰斯 / 美国队长", 
+                    actor: "克里斯·埃文斯",
+                    movies: [5, 6, 9, 11, 13, 19, 22],
+                    type: "core",
+                    color: "#00a8e8",
+                    avatar: "🛡️"
+                },
+                { 
+                    id: 3, 
+                    name: "托尔 / 雷神", 
+                    actor: "克里斯·海姆斯沃斯",
+                    movies: [4, 6, 8, 11, 17, 19, 22],
+                    type: "core",
+                    color: "#4e54c8",
+                    avatar: "⚡"
+                },
+                { 
+                    id: 4, 
+                    name: "布鲁斯·班纳 / 浩克", 
+                    actor: "马克·鲁法洛",
+                    movies: [6, 11, 13, 17, 19, 22],
+                    type: "important",
+                    color: "#77dd77",
+                    avatar: "💪"
+                },
+                { 
+                    id: 5, 
+                    name: "娜塔莎·罗曼诺夫 / 黑寡妇", 
+                    actor: "斯嘉丽·约翰逊",
+                    movies: [3, 6, 9, 11, 13, 19, 22],
+                    type: "core",
+                    color: "#ff6b6b",
+                    avatar: "🕷️"
+                },
+                { 
+                    id: 6, 
+                    name: "克林特·巴顿 / 鹰眼", 
+                    actor: "杰瑞米·雷纳",
+                    movies: [3, 6, 11, 13, 22],
+                    type: "important",
+                    color: "#8f94fb",
+                    avatar: "🏹"
+                },
+                { 
+                    id: 7, 
+                    name: "彼得·帕克 / 蜘蛛侠", 
+                    actor: "汤姆·赫兰德",
+                    movies: [13, 16, 19, 22, 23],
+                    type: "important",
+                    color: "#e62429",
+                    avatar: "🕸️"
+                },
+                { 
+                    id: 8, 
+                    name: "特查拉 / 黑豹", 
+                    actor: "查德维克·博斯曼",
+                    movies: [13, 18, 19, 22],
+                    type: "important",
+                    color: "#000000",
+                    avatar: "🐆"
+                },
+                { 
+                    id: 9, 
+                    name: "斯蒂芬·斯特兰奇 / 奇异博士", 
+                    actor: "本尼迪克特·康伯巴奇",
+                    movies: [14, 19, 22],
+                    type: "important",
+                    color: "#8f94fb",
+                    avatar: "🌀"
+                },
+                { 
+                    id: 10, 
+                    name: "彼得·奎尔 / 星爵", 
+                    actor: "克里斯·帕拉特",
+                    movies: [10, 15, 19, 22],
+                    type: "important",
+                    color: "#ff6b6b",
+                    avatar: "🚀"
+                },
+                { 
+                    id: 11, 
+                    name: "旺达·马克西莫夫 / 猩红女巫", 
+                    actor: "伊丽莎白·奥尔森",
+                    movies: [11, 13, 19, 22],
+                    type: "important",
+                    color: "#ff6b6b",
+                    avatar: "🔮"
+                },
+                { 
+                    id: 12, 
+                    name: "幻视", 
+                    actor: "保罗·贝坦尼",
+                    movies: [11, 13, 19],
+                    type: "minor",
+                    color: "#8f94fb",
+                    avatar: "💎"
+                },
+                { 
+                    id: 13, 
+                    name: "巴基·巴恩斯 / 冬兵", 
+                    actor: "塞巴斯蒂安·斯坦",
+                    movies: [5, 9, 13, 22],
+                    type: "important",
+                    color: "#00a8e8",
+                    avatar: "❄️"
+                },
+                { 
+                    id: 14, 
+                    name: "山姆·威尔逊 / 猎鹰", 
+                    actor: "安东尼·麦凯",
+                    movies: [9, 13, 19, 22],
+                    type: "important",
+                    color: "#00a8e8",
+                    avatar: "🦅"
+                },
+                { 
+                    id: 15, 
+                    name: "洛基", 
+                    actor: "汤姆·希德勒斯顿",
+                    movies: [4, 6, 8, 17],
+                    type: "important",
+                    color: "#4e54c8",
+                    avatar: "🃏"
+                },
+                { 
+                    id: 16, 
+                    name: "尼克·弗瑞", 
+                    actor: "塞缪尔·杰克逊",
+                    movies: [1, 3, 6, 9, 11, 21],
+                    type: "important",
+                    color: "#000000",
+                    avatar: "👁️"
+                },
+                { 
+                    id: 17, 
+                    name: "玛利亚·希尔", 
+                    actor: "寇碧·史莫德斯",
+                    movies: [6, 9, 11, 13],
+                    type: "minor",
+                    color: "#a0a0a0",
+                    avatar: "👩"
+                },
+                { 
+                    id: 18, 
+                    name: "佩珀·波茨", 
+                    actor: "格温妮丝·帕特洛",
+                    movies: [1, 3, 7, 19, 22],
+                    type: "minor",
+                    color: "#e62429",
+                    avatar: "👩"
+                },
+                { 
+                    id: 19, 
+                    name: "哈皮·霍根", 
+                    actor: "乔恩·费儒",
+                    movies: [1, 3, 7, 16, 23],
+                    type: "minor",
+                    color: "#e62429",
+                    avatar: "👨"
+                },
+                { 
+                    id: 20, 
+                    name: "简·福斯特", 
+                    actor: "娜塔莉·波特曼",
+                    movies: [4, 8],
+                    type: "minor",
+                    color: "#4e54c8",
+                    avatar: "👩"
+                }
+            ],
+            
+            // 预定义的社区（角色团体）
+            communities: [
+                {
+                    id: 1,
+                    name: "复仇者联盟核心",
+                    color: "#ffcc00",
+                    characters: [1, 2, 3, 4, 5, 6]
+                },
+                {
+                    id: 2,
+                    name: "银河护卫队",
+                    color: "#ff6b6b",
+                    characters: [10]
+                },
+                {
+                    id: 3,
+                    name: "奇异博士系列",
+                    color: "#8f94fb",
+                    characters: [9]
+                },
+                {
+                    id: 4,
+                    name: "美国队长系列",
+                    color: "#00a8e8",
+                    characters: [2, 13, 14]
+                },
+                {
+                    id: 5,
+                    name: "钢铁侠系列",
+                    color: "#e62429",
+                    characters: [1, 18, 19]
+                },
+                {
+                    id: 6,
+                    name: "雷神系列",
+                    color: "#4e54c8",
+                    characters: [3, 15, 20]
+                }
+            ]
+        };
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            let networkChart = null;
+            let timelineChart = null;
+            let selectedMovies = new Set(mcuData.movies.map(m => m.id)); // 默认全选
+            let selectedYear = 2023; // 默认最新年份
+            let currentCommunities = [];
+            let isPlayingTimeline = false;
+            let timelineInterval = null;
+            
+            // 初始化网络图
+            function initNetworkChart() {
+                const networkChartDom = document.getElementById('network-chart');
+                if (!networkChartDom) return;
+                
+                // 移除加载提示
+                const loading = networkChartDom.querySelector('.loading');
+                if (loading) loading.remove();
+                
+                networkChart = echarts.init(networkChartDom);
+                
+                // 生成网络数据
+                const networkData = generateNetworkData();
+                
+                const networkOption = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            if (params.dataType === 'node') {
+                                const character = mcuData.characters.find(c => c.id === params.data.id);
+                                if (character) {
+                                    const movies = character.movies.map(movieId => {
+                                        const movie = mcuData.movies.find(m => m.id === movieId);
+                                        return movie ? movie.title : '';
+                                    }).filter(title => title);
+                                    
+                                    return `
+                                        <div style="font-weight:bold;margin-bottom:5px;color:${character.color}">
+                                            ${character.name}
+                                        </div>
+                                        <div style="margin-bottom:3px">
+                                            <span style="color:#a0a0a0">演员:</span> ${character.actor}
+                                        </div>
+                                        <div style="margin-bottom:3px">
+                                            <span style="color:#a0a0a0">出现电影:</span> ${movies.length}部
+                                        </div>
+                                        <div style="margin-top:5px;color:#ffcc00">
+                                            点击查看详细信息
+                                        </div>
+                                    `;
+                                }
+                            }
+                            return params.name;
+                        },
+                        backgroundColor: 'rgba(0,0,0,0.9)',
+                        borderColor: '#ffcc00',
+                        textStyle: {
+                            color: '#fff'
+                        }
+                    },
+                    legend: {
+                        show: false
+                    },
+                    series: [{
+                        type: 'graph',
+                        layout: 'force',
+                        force: {
+                            repulsion: 300,
+                            edgeLength: 100,
+                            gravity: 0.1,
+                            friction: 0.8
+                        },
+                        roam: true,
+                        draggable: true,
+                        focusNodeAdjacency: true,
+                        symbolSize: function(data) {
+                            // 根据角色类型和电影数量决定节点大小
+                            const character = mcuData.characters.find(c => c.id === data.id);
+                            if (!character) return 20;
+                            
+                            const movieCount = character.movies.filter(movieId => 
+                                selectedMovies.has(movieId) && 
+                                mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                            ).length;
+                            
+                            if (character.type === 'core') return 30 + movieCount * 3;
+                            if (character.type === 'important') return 25 + movieCount * 2;
+                            return 20 + movieCount;
+                        },
+                        edgeSymbol: ['none', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: {
+                            show: false
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{b}',
+                            fontSize: 12,
+                            color: '#e6e6e6'
+                        },
+                        lineStyle: {
+                            color: 'source',
+                            curveness: 0.1,
+                            opacity: 0.6,
+                            width: function(data) {
+                                // 连线宽度基于共同电影数量
+                                return Math.min(5, 1 + data.value * 0.5);
+                            }
+                        },
+                        emphasis: {
+                            focus: 'adjacency',
+                            lineStyle: {
+                                width: 3
+                            },
+                            label: {
+                                fontWeight: 'bold',
+                                fontSize: 14
+                            }
+                        },
+                        categories: [
+                            { name: '核心角色', itemStyle: { color: '#e62429' } },
+                            { name: '重要角色', itemStyle: { color: '#00a8e8' } },
+                            { name: '次要角色', itemStyle: { color: '#ffcc00' } }
+                        ],
+                        data: networkData.nodes,
+                        links: networkData.links
+                    }]
+                };
+                
+                networkChart.setOption(networkOption);
+                
+                // 添加点击事件
+                networkChart.on('click', function(params) {
+                    if (params.dataType === 'node') {
+                        showCharacterInfo(params.data.id);
+                    }
+                });
+                
+                // 窗口大小变化时重绘
+                window.addEventListener('resize', function() {
+                    networkChart.resize();
+                });
+                
+                // 更新统计信息
+                updateStatistics(networkData);
+            }
+            
+            // 生成网络数据
+            function generateNetworkData() {
+                const nodes = [];
+                const links = [];
+                const linkMap = {}; // 用于避免重复连线
+                
+                // 筛选符合条件的角色（出现在选中的电影中且在选中年份之前）
+                const filteredCharacters = mcuData.characters.filter(character => {
+                    const validMovies = character.movies.filter(movieId => 
+                        selectedMovies.has(movieId) && 
+                        mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                    );
+                    return validMovies.length > 0;
+                });
+                
+                // 创建节点
+                filteredCharacters.forEach(character => {
+                    const category = character.type === 'core' ? 0 : 
+                                    character.type === 'important' ? 1 : 2;
+                    
+                    // 计算在筛选条件下的电影数量
+                    const movieCount = character.movies.filter(movieId => 
+                        selectedMovies.has(movieId) && 
+                        mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                    ).length;
+                    
+                    nodes.push({
+                        id: character.id,
+                        name: character.name,
+                        category: category,
+                        value: movieCount,
+                        symbolSize: 20 + movieCount * 2,
+                        itemStyle: {
+                            color: character.color
+                        },
+                        label: {
+                            show: movieCount > 0 // 只在有电影时显示标签
+                        }
+                    });
+                });
+                
+                // 创建连线（角色间的共同电影关系）
+                for (let i = 0; i < filteredCharacters.length; i++) {
+                    for (let j = i + 1; j < filteredCharacters.length; j++) {
+                        const char1 = filteredCharacters[i];
+                        const char2 = filteredCharacters[j];
+                        
+                        // 找出共同电影
+                        const commonMovies = char1.movies.filter(movieId => 
+                            char2.movies.includes(movieId) && 
+                            selectedMovies.has(movieId) &&
+                            mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                        );
+                        
+                        if (commonMovies.length > 0) {
+                            const linkKey = `${Math.min(char1.id, char2.id)}-${Math.max(char1.id, char2.id)}`;
+                            
+                            // 避免重复连线
+                            if (!linkMap[linkKey]) {
+                                linkMap[linkKey] = true;
+                                
+                                links.push({
+                                    source: char1.id,
+                                    target: char2.id,
+                                    value: commonMovies.length,
+                                    lineStyle: {
+                                        width: Math.min(5, 1 + commonMovies.length * 0.5),
+                                        color: getLinkColor(commonMovies.length)
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                return { nodes, links };
+            }
+            
+            // 获取连线颜色
+            function getLinkColor(commonMoviesCount) {
+                if (commonMoviesCount >= 3) return '#ffcc00';
+                if (commonMoviesCount === 2) return '#00a8e8';
+                return '#a0a0a0';
+            }
+            
+            // 初始化时间线图表
+            function initTimelineChart() {
+                const timelineChartDom = document.getElementById('timeline-chart');
+                if (!timelineChartDom) return;
+                
+                timelineChart = echarts.init(timelineChartDom);
+                
+                // 按年份分组电影
+                const yearData = {};
+                mcuData.movies.forEach(movie => {
+                    if (!yearData[movie.year]) {
+                        yearData[movie.year] = [];
+                    }
+                    yearData[movie.year].push(movie);
+                });
+                
+                const years = Object.keys(yearData).sort((a, b) => a - b);
+                const movieCounts = years.map(year => yearData[year].length);
+                
+                const timelineOption = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            const year = params[0].axisValue;
+                            const movies = yearData[year] || [];
+                            let html = `<div style="font-weight:bold;margin-bottom:5px">${year}年 (${movies.length}部电影)</div>`;
+                            movies.forEach(movie => {
+                                html += `<div style="margin:3px 0;color:${movie.color}">• ${movie.title}</div>`;
+                            });
+                            return html;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: years,
+                        axisLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.3)'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#e6e6e6'
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 3,
+                        axisLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.3)'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#e6e6e6'
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: movieCounts.map((count, index) => ({
+                            value: count,
+                            itemStyle: {
+                                color: index % 2 === 0 ? '#e62429' : '#00a8e8'
+                            }
+                        })),
+                        barWidth: '60%',
+                        markLine: {
+                            symbol: 'none',
+                            label: {
+                                formatter: '当前时间: {c}',
+                                position: 'insideEndTop',
+                                color: '#ffcc00'
+                            },
+                            lineStyle: {
+                                color: '#ffcc00',
+                                width: 2,
+                                type: 'dashed'
+                            },
+                            data: [{
+                                xAxis: selectedYear
+                            }]
+                        }
+                    }]
+                };
+                
+                timelineChart.setOption(timelineOption);
+                
+                // 添加点击事件
+                timelineChart.on('click', function(params) {
+                    if (params.componentType === 'series') {
+                        const year = params.name;
+                        updateTimeFilter(parseInt(year));
+                    }
+                });
+                
+                window.addEventListener('resize', function() {
+                    timelineChart.resize();
+                });
+            }
+            
+            // 初始化电影列表
+            function initMovieList() {
+                const movieListElement = document.getElementById('movie-list');
+                const movieCountElement = document.getElementById('movie-count');
+                
+                if (!movieListElement) return;
+                
+                movieListElement.innerHTML = '';
+                
+                // 按年份排序电影
+                const sortedMovies = [...mcuData.movies].sort((a, b) => a.year - b.year);
+                
+                sortedMovies.forEach(movie => {
+                    const movieItem = document.createElement('div');
+                    movieItem.className = `movie-item ${selectedMovies.has(movie.id) ? 'selected' : ''}`;
+                    movieItem.innerHTML = `
+                        <input type="checkbox" class="movie-checkbox" data-id="${movie.id}" ${selectedMovies.has(movie.id) ? 'checked' : ''}>
+                        ${movie.title}
+                        <span class="movie-year">${movie.year}</span>
+                    `;
+                    
+                    // 添加点击事件
+                    movieItem.addEventListener('click', function(e) {
+                        if (e.target.type !== 'checkbox') {
+                            const checkbox = this.querySelector('.movie-checkbox');
+                            checkbox.checked = !checkbox.checked;
+                            toggleMovieSelection(movie.id, checkbox.checked);
+                        }
+                    });
+                    
+                    // 复选框事件
+                    const checkbox = movieItem.querySelector('.movie-checkbox');
+                    checkbox.addEventListener('change', function() {
+                        toggleMovieSelection(movie.id, this.checked);
+                    });
+                    
+                    movieListElement.appendChild(movieItem);
+                });
+                
+                movieCountElement.textContent = sortedMovies.length;
+            }
+            
+            // 切换电影选择
+            function toggleMovieSelection(movieId, isSelected) {
+                if (isSelected) {
+                    selectedMovies.add(movieId);
+                } else {
+                    selectedMovies.delete(movieId);
+                }
+                
+                // 更新UI
+                const movieItem = document.querySelector(`.movie-checkbox[data-id="${movieId}"]`).closest('.movie-item');
+                movieItem.classList.toggle('selected', isSelected);
+                
+                // 更新网络图
+                updateNetwork();
+            }
+            
+            // 初始化社区列表
+            function initCommunityList() {
+                const communityListElement = document.getElementById('community-list');
+                const communityCountElement = document.getElementById('community-count');
+                
+                if (!communityListElement) return;
+                
+                communityListElement.innerHTML = '';
+                currentCommunities = [];
+                
+                // 检测社区（这里使用预定义的社区）
+                mcuData.communities.forEach(community => {
+                    // 检查社区中的角色在当前筛选条件下是否存在
+                    const validCharacters = community.characters.filter(charId => {
+                        const character = mcuData.characters.find(c => c.id === charId);
+                        if (!character) return false;
+                        
+                        return character.movies.some(movieId => 
+                            selectedMovies.has(movieId) && 
+                            mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                        );
+                    });
+                    
+                    if (validCharacters.length > 0) {
+                        currentCommunities.push({
+                            ...community,
+                            characterCount: validCharacters.length
+                        });
+                    }
+                });
+                
+                // 显示社区
+                currentCommunities.forEach(community => {
+                    const communityItem = document.createElement('div');
+                    communityItem.className = 'movie-item';
+                    communityItem.innerHTML = `
+                        <div style="display:flex;align-items:center;width:100%;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:${community.color};margin-right:10px;"></div>
+                            ${community.name}
+                            <span style="margin-left:auto;font-size:0.8rem;color:#a0a0a0;">
+                                ${community.characterCount}个角色
+                            </span>
+                        </div>
+                    `;
+                    
+                    communityItem.addEventListener('click', function() {
+                        highlightCommunity(community.id);
+                    });
+                    
+                    communityListElement.appendChild(communityItem);
+                });
+                
+                communityCountElement.textContent = currentCommunities.length;
+            }
+            
+            // 更新网络图
+            function updateNetwork() {
+                if (!networkChart) return;
+                
+                const networkData = generateNetworkData();
+                networkChart.setOption({
+                    series: [{
+                        data: networkData.nodes,
+                        links: networkData.links
+                    }]
+                });
+                
+                // 更新统计信息
+                updateStatistics(networkData);
+                
+                // 更新社区列表
+                initCommunityList();
+            }
+            
+            // 更新统计信息
+            function updateStatistics(networkData) {
+                document.getElementById('total-nodes').textContent = networkData.nodes.length;
+                document.getElementById('total-edges').textContent = networkData.links.length;
+                document.getElementById('total-movies').textContent = selectedMovies.size;
+                
+                // 计算平均关联度
+                const totalDegree = networkData.links.reduce((sum, link) => sum + link.value, 0);
+                const avgDegree = networkData.nodes.length > 0 ? (totalDegree / networkData.nodes.length).toFixed(2) : '0';
+                document.getElementById('avg-degree').textContent = avgDegree;
+            }
+            
+            // 更新时间筛选
+            function updateTimeFilter(year) {
+                selectedYear = year;
+                document.getElementById('time-value').textContent = year;
+                document.getElementById('time-slider').value = year;
+                
+                // 更新网络图
+                updateNetwork();
+                
+                // 更新时间线图
+                if (timelineChart) {
+                    timelineChart.setOption({
+                        series: [{
+                            markLine: {
+                                data: [{
+                                    xAxis: selectedYear
+                                }]
+                            }
+                        }]
+                    });
+                }
+            }
+            
+            // 显示角色信息
+            function showCharacterInfo(characterId) {
+                const character = mcuData.characters.find(c => c.id === characterId);
+                if (!character) return;
+                
+                // 获取角色出现的电影
+                const characterMovies = character.movies
+                    .map(movieId => mcuData.movies.find(m => m.id === movieId))
+                    .filter(movie => movie && selectedMovies.has(movie.id) && movie.year <= selectedYear);
+                
+                // 获取关联角色
+                const connectedCharacters = getConnectedCharacters(characterId);
+                
+                // 更新弹窗内容
+                document.getElementById('character-avatar').innerHTML = character.avatar;
+                document.getElementById('character-name').textContent = character.name;
+                document.getElementById('character-actor').textContent = character.actor;
+                document.getElementById('character-movie-count').textContent = characterMovies.length;
+                document.getElementById('character-degree').textContent = connectedCharacters.length;
+                document.getElementById('character-type').textContent = 
+                    character.type === 'core' ? '核心角色' : 
+                    character.type === 'important' ? '重要角色' : '次要角色';
+                
+                // 更新电影标签
+                const moviesElement = document.getElementById('character-movies');
+                moviesElement.innerHTML = '';
+                characterMovies.forEach(movie => {
+                    const tag = document.createElement('div');
+                    tag.className = 'movie-tag';
+                    tag.textContent = movie.title;
+                    tag.style.background = movie.color + '30';
+                    tag.style.color = movie.color;
+                    moviesElement.appendChild(tag);
+                });
+                
+                // 更新关联角色标签
+                const connectionsElement = document.getElementById('character-connections');
+                connectionsElement.innerHTML = '';
+                connectedCharacters.slice(0, 10).forEach(char => { // 最多显示10个
+                    const tag = document.createElement('div');
+                    tag.className = 'movie-tag';
+                    tag.textContent = char.name;
+                    tag.style.background = char.color + '30';
+                    tag.style.color = char.color;
+                    connectionsElement.appendChild(tag);
+                });
+                
+                if (connectedCharacters.length > 10) {
+                    const moreTag = document.createElement('div');
+                    moreTag.className = 'movie-tag';
+                    moreTag.textContent = `+${connectedCharacters.length - 10}更多`;
+                    moreTag.style.background = 'rgba(160, 160, 160, 0.2)';
+                    moreTag.style.color = '#a0a0a0';
+                    connectionsElement.appendChild(moreTag);
+                }
+                
+                // 显示弹窗
+                document.getElementById('overlay').classList.add('active');
+                document.getElementById('character-info').classList.add('active');
+            }
+            
+            // 获取关联角色
+            function getConnectedCharacters(characterId) {
+                const character = mcuData.characters.find(c => c.id === characterId);
+                if (!character) return [];
+                
+                const connected = [];
+                
+                // 找出所有有关联的角色（有共同电影）
+                mcuData.characters.forEach(otherChar => {
+                    if (otherChar.id === characterId) return;
+                    
+                    const commonMovies = character.movies.filter(movieId => 
+                        otherChar.movies.includes(movieId) && 
+                        selectedMovies.has(movieId) &&
+                        mcuData.movies.find(m => m.id === movieId).year <= selectedYear
+                    );
+                    
+                    if (commonMovies.length > 0) {
+                        connected.push({
+                            id: otherChar.id,
+                            name: otherChar.name,
+                            color: otherChar.color,
+                            commonMovies: commonMovies.length
+                        });
+                    }
+                });
+                
+                // 按共同电影数量排序
+                return connected.sort((a, b) => b.commonMovies - a.commonMovies);
+            }
+            
+            // 高亮社区
+            function highlightCommunity(communityId) {
+                if (!networkChart) return;
+                
+                const community = currentCommunities.find(c => c.id === communityId);
+                if (!community) return;
+                
+                // 高亮社区中的角色
+                const highlightNodes = community.characters.map(charId => ({
+                    id: charId,
+                    itemStyle: {
+                        borderColor: community.color,
+                        borderWidth: 3,
+                        shadowBlur: 10,
+                        shadowColor: community.color
+                    }
+                }));
+                
+                networkChart.dispatchAction({
+                    type: 'highlight',
+                    seriesIndex: 0,
+                    dataIndex: highlightNodes.map((_, i) => i)
+                });
+            }
+            
+            // 高亮核心角色
+            function highlightCentralCharacters() {
+                if (!networkChart) return;
+                
+                const coreCharacters = mcuData.characters.filter(c => c.type === 'core');
+                const coreNodeIndices = [];
+                
+                // 获取当前图中的核心角色索引
+                const currentOption = networkChart.getOption();
+                if (currentOption.series && currentOption.series[0].data) {
+                    const nodes = currentOption.series[0].data;
+                    coreCharacters.forEach(coreChar => {
+                        const nodeIndex = nodes.findIndex(node => node.id === coreChar.id);
+                        if (nodeIndex !== -1) {
+                            coreNodeIndices.push(nodeIndex);
+                        }
+                    });
+                }
+                
+                networkChart.dispatchAction({
+                    type: 'highlight',
+                    seriesIndex: 0,
+                    dataIndex: coreNodeIndices
+                });
+            }
+            
+            // 播放时间线动画
+            function playTimeline() {
+                if (isPlayingTimeline) return;
+                
+                isPlayingTimeline = true;
+                const playButton = document.getElementById('play-timeline');
+                playButton.innerHTML = '<i class="fas fa-pause"></i> 暂停时间线';
+                playButton.classList.remove('secondary');
+                playButton.classList.add('warning');
+                
+                let year = 2008;
+                updateTimeFilter(year);
+                
+                timelineInterval = setInterval(() => {
+                    year++;
+                    if (year > 2023) {
+                        stopTimeline();
+                        return;
+                    }
+                    updateTimeFilter(year);
+                }, 1000);
+            }
+            
+            // 停止时间线动画
+            function stopTimeline() {
+                if (!isPlayingTimeline) return;
+                
+                isPlayingTimeline = false;
+                clearInterval(timelineInterval);
+                
+                const playButton = document.getElementById('play-timeline');
+                playButton.innerHTML = '<i class="fas fa-play"></i> 播放时间线';
+                playButton.classList.remove('warning');
+                playButton.classList.add('secondary');
+            }
+            
+            // 设置事件监听器
+            function setupEventListeners() {
+                // 时间滑块
+                const timeSlider = document.getElementById('time-slider');
+                timeSlider.addEventListener('input', function() {
+                    updateTimeFilter(parseInt(this.value));
+                });
+                
+                // 全选按钮
+                document.getElementById('select-all').addEventListener('click', function() {
+                    selectedMovies = new Set(mcuData.movies.map(m => m.id));
+                    initMovieList();
+                    updateNetwork();
+                });
+                
+                // 清空按钮
+                document.getElementById('clear-all').addEventListener('click', function() {
+                    selectedMovies.clear();
+                    initMovieList();
+                    updateNetwork();
+                });
+                
+                // 播放时间线按钮
+                document.getElementById('play-timeline').addEventListener('click', function() {
+                    if (isPlayingTimeline) {
+                        stopTimeline();
+                    } else {
+                        playTimeline();
+                    }
+                });
+                
+                // 重置时间线按钮
+                document.getElementById('reset-timeline').addEventListener('click', function() {
+                    stopTimeline();
+                    updateTimeFilter(2023);
+                });
+                
+                // 检测社区按钮
+                document.getElementById('detect-communities').addEventListener('click', function() {
+                    // 这里可以添加社区检测算法
+                    // 目前使用预定义的社区
+                    initCommunityList();
+                });
+                
+                // 重置社区按钮
+                document.getElementById('reset-communities').addEventListener('click', function() {
+                    // 重置高亮
+                    if (networkChart) {
+                        networkChart.dispatchAction({
+                            type: 'downplay',
+                            seriesIndex: 0
+                        });
+                    }
+                });
+                
+                // 高亮核心角色按钮
+                document.getElementById('highlight-central').addEventListener('click', function() {
+                    highlightCentralCharacters();
+                });
+                
+                // 重置视图按钮
+                document.getElementById('reset-network').addEventListener('click', function() {
+                    if (networkChart) {
+                        networkChart.dispatchAction({
+                            type: 'restore'
+                        });
+                    }
+                });
+                
+                // 角色搜索
+                const characterSearch = document.getElementById('character-search');
+                characterSearch.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    if (searchTerm.length === 0) return;
+                    
+                    // 查找匹配的角色
+                    const matchedCharacters = mcuData.characters.filter(character => 
+                        character.name.toLowerCase().includes(searchTerm) ||
+                        character.actor.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    if (matchedCharacters.length > 0) {
+                        // 高亮显示匹配的角色
+                        const currentOption = networkChart.getOption();
+                        if (currentOption.series && currentOption.series[0].data) {
+                            const nodes = currentOption.series[0].data;
+                            const matchedIndices = [];
+                            
+                            matchedCharacters.forEach(matchedChar => {
+                                const nodeIndex = nodes.findIndex(node => node.id === matchedChar.id);
+                                if (nodeIndex !== -1) {
+                                    matchedIndices.push(nodeIndex);
+                                }
+                            });
+                            
+                            if (matchedIndices.length > 0) {
+                                networkChart.dispatchAction({
+                                    type: 'highlight',
+                                    seriesIndex: 0,
+                                    dataIndex: matchedIndices
+                                });
+                            }
+                        }
+                    }
+                });
+                
+                // 关闭角色信息弹窗
+                document.getElementById('close-info').addEventListener('click', function() {
+                    document.getElementById('overlay').classList.remove('active');
+                    document.getElementById('character-info').classList.remove('active');
+                });
+                
+                // 点击遮罩层关闭弹窗
+                document.getElementById('overlay').addEventListener('click', function() {
+                    this.classList.remove('active');
+                    document.getElementById('character-info').classList.remove('active');
+                });
+            }
+            
+            // 初始化所有功能
+            function initAll() {
+                // 初始化图表
+                initNetworkChart();
+                initTimelineChart();
+                
+                // 初始化控件
+                initMovieList();
+                initCommunityList();
+                
+                // 设置事件监听器
+                setupEventListeners();
+            }
+            
+            // 开始初始化
+            initAll();
+        });
+    </script>
+</body>
+</html>
