@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>《流浪地球》词云图 - ECharts Wordcloud</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <!-- 引入echarts-wordcloud扩展 -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.0.0/dist/echarts-wordcloud.min.js"></script>
+    <!-- 使用另一个echarts-wordcloud CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -90,6 +90,11 @@
             border: 1px solid rgba(77, 166, 255, 0.2);
         }
         
+        #wordCloudChart {
+            width: 100%;
+            height: 100%;
+        }
+        
         .info-panel {
             flex: 1;
             min-width: 300px;
@@ -115,6 +120,7 @@
             overflow-y: auto;
             margin-bottom: 25px;
             padding-right: 10px;
+            max-height: 400px;
         }
         
         /* 自定义滚动条 */
@@ -152,6 +158,7 @@
             background: linear-gradient(90deg, rgba(40, 80, 150, 0.6), rgba(30, 60, 120, 0.4));
             transform: translateX(5px);
             border-left-color: #4da6ff;
+            cursor: pointer;
         }
         
         .word-rank {
@@ -295,6 +302,24 @@
             font-weight: bold;
         }
         
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 18px;
+            color: #4da6ff;
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
         @media (max-width: 1100px) {
             .content {
                 flex-direction: column;
@@ -349,11 +374,15 @@
         </header>
         
         <div class="content">
-            <div class="chart-container" id="wordCloudChart"></div>
+            <div class="chart-container">
+                <div id="wordCloudChart"></div>
+            </div>
             
             <div class="info-panel">
                 <h2>高频词汇 TOP 50</h2>
-                <div class="word-list" id="wordList"></div>
+                <div class="word-list" id="wordList">
+                    <div class="loading">正在加载词汇数据...</div>
+                </div>
                 
                 <div class="stats">
                     <p>总词汇数量: <span id="totalWords">0</span></p>
@@ -391,7 +420,6 @@
                     <option value="cardioid">心形</option>
                     <option value="diamond">菱形</option>
                     <option value="triangle-forward">三角形</option>
-                    <option value="star">星形</option>
                     <option value="pentagon">五边形</option>
                 </select>
             </div>
@@ -401,7 +429,6 @@
                 <select id="rotation">
                     <option value="all">全部旋转</option>
                     <option value="horizontal">仅水平</option>
-                    <option value="vertical">仅垂直</option>
                     <option value="none">不旋转</option>
                 </select>
             </div>
@@ -415,460 +442,292 @@
     </div>
 
     <script>
-        // 《流浪地球》小说文本（简化版，实际应用中可加载完整文本）
-        const novelText = `
-        流浪地球 刘慈欣 刹车时代 逃逸时代 流浪时代 地球发动机 太阳 氦闪 联合政府 人类 宇宙 星空 
-        冰原 行星 发动机 光柱 等离子 北半球 南半球 地下城 逃亡 流浪 轨道 木星 比邻星 半人马座 
-        刹车 时代 逃亡 计划 发动机 推力 加速 减速 宇宙 空间 时间 百年 千年 人类文明 生存 希望 
-        恐惧 死亡 生命 爱情 家庭 父母 孩子 爷爷 妈妈 爸爸 老师 同学 学校 教育 旅行 航行 
-        太空 舰队 飞船 反物质 炸弹 小行星 撞击 海啸 洪水 岩浆 灾难 叛乱 真理 科学 哲学 信仰 
-        太阳系 红巨星 恒星 行星 卫星 轨道 引力 潮汐 近日点 远日点 变轨 加速 飞行 速度 光速 
-        流浪地球 我的流浪地球 地球派 飞船派 争论 战斗 战争 和平 希望 绝望 理智 疯狂 真理 谎言
-        太阳氦闪 爆发 爆炸 汽化 蒸发 死亡 重生 新生 延续 未来 过去 现在 记忆 历史 永恒 短暂
-        地球发动机 一万二千台 亚洲 美洲 大陆 平原 高山 山峰 华北 上海 纽约 太平洋 大西洋 海岸
-        冰面 雪橇 奥运会 比赛 选手 驾驶 旅行 结婚 生育 孩子 家庭 爱情 亲情 友情 人类情感
-        星空 星星 银河 宇宙 黑暗 光明 黎明 黄昏 日出 日落 白天 黑夜 时间 空间 无限 有限
-        流浪时代 加速 减速 航行 旅程 终点 起点 方向 目标 希望 梦想 现实 残酷 美丽 壮观 宏伟
-        `;
-        
-        // 扩展文本，添加更多小说中的关键词
-        const extendedText = novelText + `
-        发动机光柱 等离子体 蓝白色 强光 高温 酷热 冷却服 暴雨 乌云 噩梦 恐惧 心理 精神 失常
-        黄昏 昏暗 北半球 南半球 适应 自然 前太阳时代 黄金时代 历史 神话 伊甸园 宗教 上帝
-        教师 学生 学校 教育 课程 哲学 死亡 生命 意义 存在 生存 逃亡 移民 外星 星系 恒星
-        旅行 环球 地球发动机 高度 珠峰 上帝喷灯 阴影 震动 华北 山脉 燃料 重元素 聚变 科学
-        技术 力量 机器 推力 亿吨 平原 墙壁 无限 死亡 哲学 思考 恐惧 拥抱 星空 宇宙森林
-        天空 倾斜 摇摇欲坠 海边 城市 摩天大楼 洪水 潮汐 吞没 上海 巨浪 爷爷 目睹 灾难
-        苦难 等待 外太空 流浪 船 航行 霞光 青色 粉红 分界 奇妙 不安 孩子 船舱 日出 恐惧
-        太阳 火焰 亮点 圆弧 喉咙 窒息 甲板 深渊 坠落 世界 谜语 黑色 闪电 蒸汽 天体 物理
-        氦元素 聚变 爆发 红巨星 汽化 四百年 灾变 炸毁 吞没 类地行星 木星 轨道 形态 改变
-        人类 移民 外太空 恒星际 半人马座 比邻星 光年 路程 共识 争论 焦点 方式 教学 效果
-        太平洋 日出 适应 南半球 太阳 航行 空中 升高 凉爽 天气 炎热 骚乱 飞船派 地球派 打架
-        四个世纪 阿东 爸爸 监狱 反联合政府 暴动 顽固 地球派 扔到海里 恨 傻瓜 等死 飞船 万岁
-        全息图像 玻璃球 小虾 珊瑚 藻类 细菌 生态循环 密封 依赖 作用 设计 梦想 缩影 基因
-        新陈代谢 平衡 预测 祝福 世界 时间 十几天 死亡 混浊 腐烂 绿色 生命 毛状物 珊瑚
-        生态系统 精确 经不起 时间 风浪 飞船 想像 上海 纽约 行星 半人马座 恒星 光年 飞船
-        速度 光速 百分比 时间 规模 生态系统 气势磅礴 生态循环 生命 万代 不息 宇宙 婴儿
-        沙漠 母亲 老师 来不及 地球 加速 航行 太阳 爆炸 时间 联合政府 相信 努力 自豪 死亡
-        逃亡 五步 刹车时代 逃逸时代 流浪时代 加速 减速 新太阳时代 移民 过程 两千五百年 一百代人
-        航行 黑夜 星空 景象 心醉 半人马座 比邻星 新家 哭泣 水手 船长 眼泪 黑夜 大海 灯塔
-        冰雪 荒原 旅人 火光 太阳 希望 支撑 回家 航程 启航 信号 彗星 月球 行星发动机 推离
-        轨道 相撞 彗尾 大海 蓝光 群星 巨浪 冲天 飞机 南半球 家长 启航 日子 光柱 睁不开眼
-        亮了几倍 笔直 最大功率 加速 巨浪 轰鸣 滚上 大陆 飓风 水沫 光柱 呼啸 大树 宇宙空间
-        彗星 蓝色 刺破 黑暗 太空 地球 上路 人类 上路 启航 爷爷 去世 烫伤 感染 弥留 念叨
-        流浪地球 学校 地下城 居民 隧洞 坡度 延伸 城市 样子 支洞 密封门 洞顶 泛光灯 金属蓝色
-        后半生 时光 世界 度过 黯然神伤 原始人 洞里 灵儿 低声 老师 听见 办法 孩子 地面 环境
-        可怕 冷 唾沫 冰块 热 蒸汽 地球 太阳 距离 远 变轨 加速 低年级 娃娃 问 不同 发动机
-        劲儿 加速度 太阳轨道 十五圈 加速 圆 扁 速度 太阳 移 扁圈 边儿 地球 太阳 距离 远 冷
-        轨道 动力学 近 热 小天才 记忆 遗传 技术 娃娃 平常人 人类 幸运 地球发动机 奇迹 四个世纪
-        现实 地球发动机 喷灯 全功率 开动 地球 火箭 喷口 护圈 安静 心里 烦 地下 生活 五百米
-        人口 百万 城市 遍布 大陆 地下城 小学 中学 教育 理工科 艺术 哲学 压缩 最少 人类 闲心
-        时代 工作 宗教 一夜之间 消失 无影无踪 上帝 王八蛋 历史课 课本 前太阳时代 人类历史 伊甸园
-        神话 空军 近地轨道 宇航员 时间 变轨 加速 第五年 地球 远日点 全家 海边 运行 远日点 顶端
-        节日 新年 圣诞节 地球 太阳 最近 虚幻 安全感 地面 密封 加热服 地球发动机 光柱 东西
-        地面 世界 部分 淹没 光柱 强光 变化 飞行汽车 时间 光柱 太阳 海边 太阳 棒球 大小 悬
-        天边 光芒 周围 晨曦 亮影 天空 深蓝色 星星 清晰 可见 举目 海 眼前 冰原 封冻 大海
-        狂欢 焰火 暗蓝色 空中 开放 冰冻 海面 人们 感情 狂欢 喝醉 冰上 打滚 唱歌 声音 压倒
-        每个人 生活 爸爸 突然 事情 黎星 离开 妈妈 平静 小学老师 回答 中学 两年 爸爸 老师 认识
-        毕业 仪式 妈妈 愿意 行 声音 冰冻 海面 平稳 激动 漂亮 全息 散射体 空中 开放 焰火 赞美
-        时代 电影 小说 莫名其妙 前太阳时代 感情 男女 主人公 爱情 痛苦 哭泣 惊奇 难以言表 时代
-        死亡 威胁 逃生 欲望 压倒 太阳 状态 地球 位置 注意 打动 注意力 关注 本质 改变 人类
-        心理 状态 精神 生活 爱情 东西 余光 赌徒 轮盘 间隙 秒钟 口水 两个月 爸爸 老师 回来
-        妈妈 高兴 黎星 印象 创造力 学生 妈妈 茫然 老师 小学老师 爸爸 两个月 想起 摇头 四十
-        记忆力 样子 抬头 天花板 全息 星空 四壁 全息 森林 回来 挺好 图像 换换 孩子 腻 调整
-        玩艺儿 地球 太阳 跌去 全家 事情 忘记 新闻报道 融化 全家 海边 地球 火星 轨道 太阳 光照量
-        地球 气温 仍然 低 地球发动机 影响 地面 气温 适宜 加热服 冷却服 地面 感觉 愉快 地球发动机
-        半球 天空 样子 半球 太阳 临近 天空 明朗 纯蓝色 太阳 空中 启航 明亮 空中 海 融化 冰原
-        失望 飞行汽车 惊天动地 隆隆声 声音 星球 深处 地球 爆炸 大海 声音 爸爸 气温 骤升 冰层
-        受热 均匀 地震 雷霆 尖厉 巨响 低沉 隆隆声 后面 大海 人们 欢呼 海面 裂开 长缝 开裂 速度
-        冰原 黑色 闪电 巨响 裂缝 海冰 出现 海水 裂缝 喷出 冰原 急流 回家 路上 荒芜 大地 野草
-        大片 地面 花朵 怒放 嫩叶 枯死 森林 绿装 生命 时间 活力 地球 太阳 距离 接近 人们 心
-        一天天 揪紧 地面 欣赏 春色 人们 地下城 躲避 酷热 暴雨 飓风 太阳 接近 恐惧 睡下 妈妈
-        低声 爸爸 可能 来不及 爸爸 近日点 谣言 真的 钱德勒 博士 夫人 口中 听说 丈夫 航行委员会
-        天文学家 亲口 告诉 观测 氢 聚集 加速 听着 亲爱的 希望 高贵 前太阳时代 高贵 金钱 权力
-        才能 今天 希望 黄金 宝石 孩子 人们 近日点 心神不定 放学 不知不觉 城市 中心 广场 喷泉
-        水池 呆立 低头 池水 抬头 广场 穹顶 光波纹 池水 反射 灵儿 瓶子 管子 肥皂泡 泡泡 消失
-        旅行 地面 挥手 空中 计算机 全息 景象 落日 海滩 微风 棕榈树 白浪 沙滩 情侣 碎金 海面
-        剪影 梦娜 大刚 发回 满世界 转 外面 热 旷课 学校 开除 怕 太阳 精神病 医生 启示 肥皂泡
-        表面 狂澜 感觉 把握 复杂 精细 涌动 泡泡 生命 长度 记忆 梦幻 传奇 世界 演绎 爆炸 消失
-        水汽 存在 半秒钟 地球 宇宙 水泡 啪 氦闪 发生 地球 蒸发 小时 可怕 地下 馅饼 肉馅 烤熟
-        蒸发 地面 不一样 瞬间 蒸发 地面 人们 泡泡 啪 氦闪 地面 灵儿 阿东 见到 氦闪 发生 地球
-        高速 掠过 近日点 第六次 远日点 升去 人们 神经 松弛 地球 自转 停止 太阳 轨道 面 亚洲
-        大陆 地球发动机 运行 方向 近日点 停下 调整 姿态 运行 宁静 漫长 黑夜 美洲 大陆 发动机
-        全功率 运行 火箭 喷口 护圈 太阳 西半球 高温 可怕 草木 生烟 地球 变轨 加速 年复一年 进行
-        地球 远日点 升去 人们 心 地球 太阳 距离 日益 拉长 放松 新年 太阳 跌去 人们 心 一天天
-        紧缩 到达 近日点 社会 谣言 四起 太阳 氦闪 发生 地球 再次 升向 远日点 人们 恐惧 天空 渐渐
-        变小 太阳 平息 酝酿 下一次 恐惧 人类 精神 宇宙 秋千 宇宙 俄罗斯 轮盘赌 升上 远日点 跌向
-        太阳 过程 转动 弹仓 掠过 近日点 扣动 扳机 神经 紧张 恐惧 度过 少年时代 仔细 想想 远日点
-        地球 脱离 太阳 氦闪 威力圈 太阳 爆发 地球 汽化 液化 结果 近日点 逃逸时代 大灾难 接踵而至
-        地球发动机 加速度 运行 轨道 改变 地核 铁镍 核心 平衡 扰动 影响 穿过 古腾堡 不连续面 波及
-        地幔 大陆 地热 逸出 火山 横行 人类 地下城市 致命 威胁 第六次 变轨 周期 大陆 地下城 岩浆
-        渗入 灾难 频繁 发生 警报 响起 放学 回家 路上 市政厅 广播 市民 注意 城市 北部 屏障 地应力
-        破坏 岩浆 渗入 到达 街区 公路 出口 封死 市民 中心 广场 集合 升降 地面 撤离 注意 撤离 危急法
-        第五条 行事 强调 撤离 危急法 第五条 行事 环视 迷宫 通道 地下城 异常 危险 两条 通向 外部
-        地下 公路 加固 屏障 需要 堵死 升降梯 逃命 升降梯 载运量 城市 万人 运出 时间 争夺 生存 机会
-        联合政府 危急法 安排 古代 伦理学 问题 洪水 到来 男人 父亲 儿子 时代 人们 问题 理解 中心
-        广场 人们 年龄 排起 长队 电梯口 机器人 保育员 婴儿 幼儿园 孩子 小学生 队伍 中间 靠前 部分
-        爸爸 近地 轨道 值班 城里 妈妈 妈妈 队伍 士兵 拦住 最后 一段 城市 学校 集中 家庭 年纪 批人
-        长队 心里 着火 慢速度 移动 小时 轮到 跨进 升降梯 心里 轻松 妈妈 生存 隔着 万名 大学生 闻
-        浓烈 硫磺味 地面 两个半小时 后 岩浆 五百米 深处 吞没 整座 城市 心如刀绞 想像 妈妈 最后 时刻
-        撤出 一万八千人 岩浆 涌进 市中心 广场 停电 地下城 岩浆 暗红色 光芒 广场 穹顶 高温 渐渐 变黑
-        遇难者 接触 岩浆 千度 高温 夺去 生命 生活 继续 严酷 恐惧 现实 爱情 闪现 迷人 火花 缓解
-        人们 紧张 情绪 第十二次 到达 远日点 联合政府 恢复 中断 两个世纪 奥运会 机动 冰橇 拉力赛 选手
-        参加 奥运会 比赛 驾驶 机动 冰橇 上海 出发 冰面 横穿 封冻 太平洋 到达 终点 纽约 发令枪 响过
-        雪橇 冰冻 海洋 小时 公里 速度 出发 雪橇 相伴 两天 消失 地平线 背后 地球发动机 光芒 地球 黑暗
-        部分 眼中 世界 星空 四面 无限 延伸 冰原 组成 冰原 宇宙 尽头 本身 宇宙 尽头 无限 星空 无限
-        冰原 组成 宇宙 雪崩 孤独感 压倒 赶路 名次 紧要 孤独感 杀死 摆脱 彼岸 似乎 根本 存在 天边
-        出现 人影 姑娘 雪橇 长发 冰原 寒风 飘动 遇见 姑娘 意味 后半生 决定 日本人 山彬加代子 女子组
-        出发 小时 雪橇 冰缝 滑杆 卡断 修雪橇 感觉 告诉 感觉 宇宙 远方 出现 太阳 升起 救援 飞机 体现
-        人类 精神 比赛 流浪地球 宇宙 救援 挥动 拳头 日本人 执着 备用 滑杆 雪橇 修好 雪橇 走 漫长 路程
-        夏威夷 天边 曙光 小小 太阳 照亮 无际 冰原 联合政府 民政部 发去 结婚 申请 到达 纽约 项目 裁判
-        不耐烦 收摊 民政局 官员 等待 致以 新婚 祝贺 履行 职责 挥手 空中 划出 全息 图像 整齐 排列
-        圆点 全世界 联合政府 登记 结婚 数目 环境 严酷 法律 规定 三对 新婚 配偶 生育权 抽签 决定 加代子
-        空中 圆点 犹豫 半天 中间 圆点 变为 绿色 高兴 跳了起来 心中 滋味 孩子 出生 苦难 时代 幸运 不幸
-        官员 兴高采烈 点绿 时候 高兴 伏特加 轮着 一人 一口 喝 人类 延续 干杯 身后 遥远 太阳 微弱 光芒
-        自由女神像 镀上 金辉 对面 无人 居住 曼哈顿 摩天大楼 微弱 阳光 影子 长长 纽约港 寂静 冰面 醉意
-        朦胧 眼泪 涌出 地球 流浪地球 分手 官员 递 钥匙 醉醺醺 亚洲 分到 房子 回家 家 亚洲 地下城 充满
-        危险 西半球 体会 危险 地球 穿过 小行星 西半球 运行 方向 变轨 周期 经过 小行星 大事 擦着 小行星
-        边缘 太空 舰队 应付 激光 核弹 地球 航线 石块 清除 新闻 地球 小行星 正中 穿过 舰队 对付 石块
-        亚洲 飞机 加代子 石块 爸爸 太空 舰队 干部 工作 政府 避免 惊慌 照例 封锁 消息 情况 告诉 加代子
-        石块 大山 五千万 吨级 热核 炸弹 小坑 使用 人类 手中 威力 武器 神秘 告诉 加代子 反物质 炸弹
-        太空 舰队 巡航 范围 力量 有限 爸爸 公里 看到 别看 加代子 护目镜 反物质 炸弹 闪光 太空 传来
-        加代子 欣赏 飞机 舷窗 空中 星星 双眼 失明 小时 眼睛 红肿 流泪 心惊肉跳 时刻 反物质 炮弹 击中小行星
-        湮灭 强光 此起彼伏 漆黑 太空 闪现 宇宙 巨人 围着 地球 闪光灯 疯狂 拍照 半小时 火流星 火星 划破
-        长空 恐怖 美感 火流星 空中 划过 距离 机身 巨响 震颤 连续 巨响 震颤 加代子 惊叫 扑到 怀中 飞机
-        流星 击中 舱里 响起 机长 声音 乘客 惊慌 流星 冲破 音障 产生 超音速 爆音 耳机 听觉 受到 永久 损害
-        飞行 安全 无法 保证 夏威夷 紧急 降落 盯住 火流星 火球 体积 大气 烧完 火球 疾驰 大半 天空 坠入
-        冰海 万米 高空 海面 击中 位置 出现 小白点 白点 扩散 白色 圆圈 圆圈 迅速 海面 扩大 浪 加代子 颤声
-        浪 百米 海 封冻 冰面 衰减 自我 安慰 檀香山 降落 当地 政府 安排 地下城 汽车 海岸 天空 布满 火流星
-        红发 恶魔 太空 点 迸发 流星 海岸 击中 海面 水柱 水蒸汽 白色 蘑菇云 升起 涌浪 冰层 传到 岸边 冰层
-        轰隆隆 破碎 冰面 显出 浪 形状 柔软 巨兽 下面 排队 游过 接应 官员 公斤 脑袋 通知 北方 公里 海面
-        落下 二十吨 手腕 通讯机 响 司机 来不及 门 入口 汽车 拐弯 地下城 入口 停下 下车 入口 士兵 远方
-        方向 眼里 充满 恐惧 目光 天海 连线 黑色 屏障 云层 高度 长墙 墙头 镶着 白边 军官 回答 毛发 直竖
-        浪 地下城 铁门 隆隆 关上 十分钟 地面 传来 低沉 声音 咕噜噜 巨人 地面 打滚 面面相觑 百米 巨浪
-        滚过 夏威夷 滚过 大陆 震动 吓人 巨拳 太空 击打 地球 地下 震动 隐约 震动 直达 灵魂 深处 流星 击中
-        地面 星球 残酷 轰炸 断断续续 持续 星期 走出 地下城 加代子 惊叫 天空 灰色 高层 大气 弥漫 小行星
-        撞击 陆地 产生 灰尘 星星 太阳 消失 灰色 宇宙 大雾 地面 滔天 巨浪 留下 海水 时间 退去 封冻 城市
-        幸存 高楼 形单影只 冰面 冰凌柱 冰面 落下 撞击尘 世界 颜色 灰色 加代子 继续 亚洲 旅行 飞机 越过
-        国际 日期 变更线 人类 黑夜 飞机 潜行 墨汁 海洋 机舱 光线 世界 心情 黯淡 极点 喃喃 旅程 充满 苦难
-        灾难 生活 尽头 地球 航出 氦闪 威力圈 逃生 漫长 阶梯 一级 一百代 重孙 爬上 阶梯 顶端 见到 新生活
-        光明 骨头 变成灰 想像 未来 苦难 艰辛 想像 爱人 孩子 泥泞路 累 走不动 悲伤 绝望 窒息 机舱 响起
-        女人 惊叫 循声 女人 男人 手中 夺下 手枪 枪口 凑到 太阳穴 瘦弱 目光 呆滞 前方 无限 远处 女人 头
-        埋 膝上 嚶嚶 哭泣 安静 男人 冷冷 哭声 消失 飞机 发动机 嗡嗡声 轻响 哀乐 感觉 飞机 粘 黑暗 一动不动
-        宇宙 黑暗 飞机 加代子 紧紧 钻 怀里 浑身 冰凉 突然 机舱 前部 骚动 兴奋 低语 窗外 飞机 前方 出现
-        朦胧 光亮 蓝色 形状 十分 均匀 前方 弥漫 撞击 尘埃 夜空 地球发动机 光芒 西半球 地球发动机 陨石 击毁
-        三分之一 损失 启航 预测 东半球 地球发动机 背向 撞击面 完好 无损 功率 地球 完成 逃逸 航行 眼中 前方
-        朦胧 蓝光 深海 漫长 上浮 海面 亮光 呼吸 顺畅 女人 声音 痛苦 恐惧 东西 活着 感觉到 黑暗 活着 瘦弱
-        男人 回答 盯住 前方 蓝光 眼泪 活下去 希望 蓝光 亮着 活下去 父亲 希望 话语 飞机 加代子 地下城 新家
-        地面 太空 舰队 基地 爸爸 基地 见到 追授 冰冷 勋章 勋章 空军 少将 告诉 清除 地球 航线 小行星 行动
-        反物质 炸弹 炸出 小行星 碎片 击中 爸爸 单座 微型 飞船 石块 飞船 相对 速度 每秒 公里 撞击 飞船 座舱
-        瞬间 汽化 痛苦 保证 痛苦 将军 地球 太阳 跌回 加代子 地面 春天 世界 灰色 阴暗 天空 大地 分布 残留
-        海水 形成 冰冻 湖泊 绿色 大气 撞击 尘埃 挡住 阳光 气温 回升 近日点 海洋 大地 解冻 太阳 朦胧 光晕
-        撞击 尘埃 后面 幽灵 三年 空中 撞击 尘埃 消散 人类 最后 一次 通过 近日点 远日点 升去 近日点 东半球
-        有幸 目睹 地球 历史 快 日出 日落 太阳 海平面 跃起 迅速 划过长空 大地 万物 影子 变换 角度 无数 钟表
-        秒针 地球 最短 白天 小时 小时 太阳 跌入 地平线 黑暗 降临 大地 伤感 转瞬即逝 一天 地球 太阳系 亿年
-        进化史 短暂 总结 宇宙 末日 回来 天黑 加代子 忧伤 最长 一夜 东半球 一夜 延续 两千五百年 一百代人
-        半人马座 曙光 再次 照亮 大陆 西半球 面临 最长 白天 黑夜 短 太阳 天顶 静止 位置 渐渐 变小 半世纪
-        融入 星群 分辨 预定 航线 地球 升向 木星 会合点 航行委员会 计划 地球 第十五圈 公转 轨道 扁 远日点
-        到达 木星 轨道 地球 木星 相撞 距离 擦身而过 木星 巨大 引力 拉动 地球 最终 达到 逃逸 速度 离开 近日点
-        两个月 肉眼 看到 木星 模糊 光点 显出 圆盘 形状 一个月 木星 地球 上空 满月 大小 暗红色 隐约 看到 条纹
-        十五年 一直 垂直 地球发动机 光柱 开始 摆动 地球 会合 最后 姿态 调整 木星 渐渐 沉到 地平线 三个多月
-        木星 地球 另一面 看不到 行星 交会 突然 被告知 东半球 看到 木星 人们 地下城 地面 走出 城市 密封门
-        地面 发现 十五年 地球发动机 全部 关闭 再次 看到 星空 表明 木星 最后 交会 进行 人们 紧张 盯着 西方
-        地平线 地平线 出现 暗红色 光区 扩大 伸延 整个 地平线 宽度 发现 暗红色 区域 上方 漆黑 星空 一道 整齐
-        边界 边界 弧形 巨大 弧形 地平线 一端 跨到 另一端 缓缓 升起 巨弧 下方 天空 变成 暗红色 暗红色 幕布
-        星空 大小 地球 宇宙 隔开 回过神来 倒吸 冷气 暗红色 幕布 木星 知道 木星 体积 地球 一千三百倍 真正
-        感觉 巨大 宇宙 巨怪 整个 地平线 升起 产生 恐惧 压抑感 难以 语言 描述 记者 写道 身处 噩梦 宇宙 造物主
-        巨大 变态 头脑 噩梦 木星 恐怖 上升 渐渐 占据 半个 天空 清楚 看到 云层 风暴 风暴 云层 搅动 迷茫
-        混乱 线条 知道 厚厚 云层 下方 沸腾 液氨 液氮 大洋 著名 大红斑 出现 木星 表面 维持 几十万年 大旋涡
-        吞下 整整 三个 地球 木星 占满 整个 天空 地球 悬浮 木星 沸腾 暗红色 云海 气球 木星 大红斑 天空 正中
-        红色 巨眼 盯着 世界 大地 笼罩 阴森 红光 相信 小小 地球 逃出 巨大 怪物 引力场 地面 地球 成为 木星
-        卫星 掉进 无边 云海 覆盖 地狱 领航 工程师 计算 精确 暗红色 迷乱 天空 缓缓 移动 时间 西方 天边 露出
-        黑色 一角 黑色 迅速 扩大 星星 闪烁 地球 冲出 木星 引力 魔掌 警报 尖叫 木星 产生 引力 潮汐 向内陆
-        推进 得知 大潮 百米 巨浪 再次 横扫 整个 大陆 跑进 地下城 密封门 最后 看了一眼 占据 半个 天空 木星
-        发现 木星 云海 一道 明显 划痕 知道 地球 引力 作用 木星 表面 痕迹 星球 木星 表面 拉起 如山 液氢 液氦
-        巨浪 木星 巨大 引力 地球 加速 甩出 外太空 离开 木星 地球 达到 逃逸 速度 需要 返回 潜藏 死亡 太阳
-        广漠 外太空 飞去 漫长 流浪 时代 开始 木星 暗红色 阴影 儿子 地层 深处 出生 叛乱 离开 木星 亚洲 大陆
-        一万多台 地球发动机 再次 全功率 开动 运行 五百年 加速 地球 五百年 发动机 亚洲 大陆 一半 山脉 燃料
-        消耗 四个多世纪 死亡 恐惧 解脱 人们 长出一口气 预料 狂欢 出现 事情 出乎 所有人 想像 地下城 庆祝 集会
-        一个人 穿上 密封服 地面 童年 熟悉 群山 超级 挖掘机 夷为平地 大地 裸露 岩石 坚硬 冻土 冻土 白色 斑块
-        大海 潮 留下 盐渍 面前 爷爷 爸爸 度过 一生 千万 人口 大城市 废墟 高楼 钢筋 外露 残骸 地球发动机 光柱
-        蓝光 长长 影子 史前 巨兽 化石 洪水 小行星 撞击 摧毁 地面 一切 大陆 城市 植被 荡然无存 地球 表面 变成
-        火星 荒漠 一段时间 加代子 心神不定 扔下 孩子 一个人 开着 飞行汽车 出去 旅行 回来 西半球 最后 拉我
-        飞行汽车 四倍 音速 飞行 两个小时 看到 太阳 刚刚 升出 太平洋 棒球 大小 冰封 洋面 投下 微弱 冷冷 光芒
-        加代子 飞行汽车 悬停 空中 后面 拿出 东西 封套 天文望远镜 业余 爱好者 加代子 打开 车窗 望远镜 对准 太阳
-        有色 镜片 看到 放大 几百倍 太阳 清楚 看到 太阳 表面 缓缓 移动 明暗 斑点 日球 边缘 隐隐约约 日耳 加代子
-        望远镜 车内 计算机 联起来 太阳 影像 采集 调出 太阳 图像 四个世纪 太阳 图像 计算机 图像 比较 屏幕 光度
-        像素 排列 像素 概率 层次 统计 参数 完全 一样 摇头 说明 玩具 望远镜 低级 图像 处理 程序 无知 外行
-        自寻烦恼 谣言 白痴 收回 望远镜 飞行汽车 回开 上方 下方 远远 看到 几辆 飞行汽车 悬停 空中 车窗 伸出
-        望远镜 太阳 几个月中 可怕 说法 野火 全世界 蔓延 人们 自发 大型 精密 仪器 观测 太阳 民间 组织 太阳
-        发射 探测器 三个月 穿过 日球 探测器 发回 数据 最后 证实 事实 四个世纪 相比 太阳 任何 变化 大陆 地下城
-        骚动 火山 局势 一触即发 按照 联合政府 法令 加代子 儿子 送进 养育中心 回家 路上 维系 关系 组带 不存在
-        市中心 广场 演讲 演讲者 周围 市民 分发 武器 公民们 地球 出卖 人类 出卖 文明 出卖 超级 骗局 牺牲品
-        骗局 巨大 可怕 上帝 休克 太阳 原来 太阳 爆发 过去 现在 未来 永恒 象征 爆发 联合政府 那些人 阴险 野心
-        编造 一切 建立 独裁 帝国 毁掉 地球 毁掉 人类 文明 公民们 良知 公民们 拿起 武器 拯救 星球 拯救 人类
-        文明 推翻 联合政府 控制 地球发动机 星球 寒冷 外太空 开回 原来 轨道 开回 太阳 温暖 怀抱 加代子 默默
-        走上前 分发 武器 人手中 接过 冲锋枪 加入 拿到 武器 市民 队列 回头 庞大 队列 消失 地下城 迷雾 呆呆
-        站 手 衣袋 紧紧 攥着 父亲 生命 忠诚 换来 勋章 边角 手 扎出 血 三天 叛乱 大陆 同时 爆发 叛军 人民
-        群起 响应 怀疑 受骗 加入 联合政府 军队 政府 坚信 三代 前辈 军旅 生涯 心中 种下 忠诚 种子 情况 背叛
-        联合政府 想像 美洲 非洲 大洋洲 南极洲 相继 沦陷 联合政府 收缩 防线 死守 地球发动机 东亚 中亚 叛军
-        构成 包围 态势 政府军 占有 压倒 优势 相当长 一段时间 攻势 取得 进展 完全 地球发动机 叛军 毁掉 地球
-        发动机 广阔 战区 使用 重武器 联合政府 苟延残喘 双方 相持 三个月 联合政府 十二个 集团军 相继 临阵倒戈
-        中亚 东亚 防线 全线 崩溃 两个月 大势 联合政府 连同 十万 军队 靠近 海岸 地球发动机 控制 中心 陷入 重围
-        残存 军队 少校 控制 中心 中等 城市 大小 中心 地球 驾驶室 拖着 激光束 烧焦 手臂 躺 控制 中心 伤兵
-        收容站 得知 加代子 澳洲 战役 阵亡 收容站 所有人 整天 喝得 烂醉 外面 战争 全然 不知 感兴趣 时间 听到
-        高声 说话 自责 战争 反人类 讲话 人肩上 将星 关系 最后 机会 拯救 灵魂 地球 驾驶室 街区 占领 交给 外面
-        理智 人类 联合政府 尽到 责任 人类 尽责任 受伤 手 抽出手枪 突然 狂热 受伤 受伤 人 沿着 钢铁 通道 地球
-        驾驶室 冲去 出乎 预料 路上 遇到 抵抗 越来越 多人 错综复杂 钢铁 通道 分支 加入 最后 来到 巨大 门前
-        钢铁 大门 望不到 顶 轰隆隆 打开 冲进 地球 驾驶室 无数 电视 看到 驾驶室 宏伟 震惊 视觉 大小 驾驶室
-        淹没 巨型 全息图 太阳系 模拟图 整个 图像 实际 方向 无限 伸延 黑色 空间 进来 悬浮 空间 尽量 反映 真实
-        比例 太阳 行星 萤火虫 分辨 遥远 代表 太阳 光点 中心 醒目 红色 螺旋线 扩展 广阔 黑色 洋面 迅速 扩散
-        红色 波圈 地球 航线 螺旋线 外面 一点 航线 变成 明亮 绿色 地球 没有 完成 路程 绿线 头顶 掠过 顺着 看到
-        灿烂 星海 绿线 消失 星海 深处 尽头 广漠 黑色 空间 漂浮 许多 闪亮 灰尘 尘粒 飘近 发现 虚拟 屏幕 翻滚
-        复杂 数字 曲线 看到 全人类 瞩目 地球 驾驶台 漂浮 黑色 空间 银白色 小行星 难以 把握 巨大 驾驶台 本身
-        广场 密密麻麻 站着 五千多人 包括 联合政府 主要 成员 负责 实施 地球 航行 计划 星际 移民 委员会 大部分
-        最后 忠于 政府 人 听到 最高 执政官 声音 整个 黑色 空间 响起 战斗 到底 导致 地球发动机 失控 情况 发生
-        过量 聚变 物质 烧穿 地球 蒸发 全部 海洋 决定 投降 理解 所有人 进行 四十代人 延续 一百代人 艰难 奋斗
-        永远 保持 理智 确实 奢求 所有人 记住 站在 五千多人 联合政府 最高 执政官 普通 列兵 信念 坚持 最后 知道
-        看不到 真理 证实 一天 人类 得以 延续 万代 所有人 墓前 洒下 眼泪 行星 永恒 纪念碑 控制 中心 巨大 密封门
-        隆隆 开启 五千多名 最后 地球派 群群 走出 叛军 押送 海岸 走去 路上 两边 挤满 所有人 唾沫 冰块 石块 砸
-        密封服 面罩 砸裂 外面 零下 一百多度 严寒 人脸 麻木 努力 走下去 看到 小女孩 举起 冰块 全身 力气 狠命
-        老者 砸去 眼睛 透过 面罩 射出 疯狂 怒火 听到 五千人 全部 判处 死刑 宽容 仅仅 一死 偿清 罪恶 偿清 离奇
-        变态 想像 骗局 毁掉 地球 毁掉 人类 文明 罪恶 死 一万次 想起 做出 太阳 爆发 预测 天体 物理学家 设计 建造
-        地球发动机 工程师 世纪 作古 坟墓 挖出 一万次 感谢 死刑 执行者 罪犯 死法 收走 判处 死刑 每个人 密封服
-        加热 核能 电池 丢在 大海 冰面 零下 百度 严寒 慢慢 夺去 生命 人类 文明 史 险恶 可耻 罪犯 冰海 站 黑压压
-        岸上 十几万人 看着 十几万 牙齿 咬得 咔咔 响 十几万 眼睛 喷出 小女孩 怒火 地球发动机 关闭 壮丽 群星
-        出现 冰原 想像 严寒 无数 尖刀 刺进 身体 血液 凝固 生命 体内 一点点 流走 想像 感觉 变成 快感 传遍 全身
-        看到 严寒 折磨 慢慢 死去 岸上 人们 快活 唱起 我的太阳 眼睛 星空 方向 方向 稍大些 刚刚 显出 圆盘 形状
-        星星 发出 黄色 光芒 太阳 太阳 生命 之母 万物 之父 大神 上帝 稳定 永恒 渺小 灰尘 不如 炭基 细菌 拥挤
-        围着 一粒 小石头 预言 末日 蠢到 程度 小时 过去 海面 反人类 罪犯 全部 站着 活人 血液 冻结 眼睛 突然
-        看不见 秒钟 视力 渐渐 恢复 冰原 海岸 岸上 人群 眼前 慢慢 显影 完全 清晰 刚才 清晰 世界 笼罩 强烈 白光
-        眼睛 失明 突然 出现 强光 刺激 天空 重现 星光 强光 淹没 宇宙 强光 融化 强光 太空 点 迸发 点 宇宙 中心
-        点 刚才 盯着 方向 太阳 氦闪 爆发 我的太阳 合唱 戛然而止 岸上 十几万人 呆住 海面 那些人 冻成 一片 僵硬
-        岩石 太阳 最后 一次 光热 洒向 地球 地面 结冰 二氧化碳 干冰 首先 融化 腾起 白色 蒸汽 海水 表面 开始 融化
-        受热 不均 大海 冰层 发出 惊天动地 巨响 渐渐 照在 地面 光 柔和 天空 出现 微微 蓝色 强烈 太阳风 产生 极光
-        空中 出现 苍穹 飘动 巨大 彩色 光幕 突然 出现 灿烂 阳光 海面 最后 地球派 稳稳 站着 五千多 雕像 太阳 爆发
-        持续 很短 时间 两个小时 强光 开始 急剧 减弱 熄灭 太阳 位置 出现 暗红色 球体 体积 慢慢 膨胀 看到 达到
-        地球 轨道 看到 太阳 大小 实际 体积 大到 越出 火星 轨道 水星 火星 金星 三颗 地球 伙伴 行星 上亿度 辐射
-        化为 一缕 轻烟 太阳 发出 光热 看去 如同 贴在 太空 一张 冰冷 红纸 暗红色 光芒 似乎 周围 星光 散射 小质量
-        恒星 演化 归宿 红巨星 五十亿年 壮丽 生涯 成为 飘逝 梦幻 太阳 死了 幸运 活着 回忆 半个世纪 过去 二十年前
-        地球 航出 冥王星 轨道 航出 太阳系 寒冷 广漠 外太空 继续 孤独 航程 最近 一次 地面 十几年前 事情 儿子 儿媳
-        陪同 儿媳 金发 碧眼 姑娘 母亲 地面 首先 注意 所有 地球发动机 全功率 运行 巨大 光柱 看不到 地球 大气 消失
-        等离子体 光芒 散射 缘故 看到 地面 布满 奇怪 黄绿 相间 半透明 晶体块 固体 氧氮 冻结 空气 有趣 空气 均匀
-        冻结 地球 表面 形成 小山丘 不规则 隆起 原来 平滑 大海 冰原 半透明 小山 形成 奇特 景观 银河系 星河 纹丝不动
-        横过 天穹 冻结 星光 看久 刺眼 地球发动机 不间断 开动 五百年 地球 加速 光速 千分之五 地球 速度 滑行 一千三百年
-        地球 走完 三分之二 航程 掉转 发动机 方向 开始 长达 五百年 减速 地球 航行 两千四百年 到达 比邻星 过 一百年 时间
-        泊入 恒星 轨道 成为 卫星 知道 忘却 流浪 航程 太长 时刻 叫 一声 东方 再次 出现 霞光 知道 忘却 启航 时代
-        太远 时刻 叫 一声 人类 看到 蓝天 知道 忘却 太阳系 往事 太久 时刻 叫 一声 鲜花 重新 挂上 枝头 每当 听到
-        歌 暖流 涌进 年迈 僵硬 身躯 干涸 老眼 湿润 看到 半人马座 三颗 金色 太阳 地平线 依次 升起 万物 沐浴 温暖
-        光芒 固态 空气 融化 变成 碧蓝 天 两千多年前 种子 解冻 土层 复苏 大地 绿 看到 第一百代 孙子 孙女 绿色 草原
-        欢笑 草原 清澈 小溪 溪中 银色 小鱼 看到 加代子 绿色 大地 跑来 年轻 美丽 天使 地球 流浪地球
-        `;
-        
-        // 中文停用词列表（简化版）
-        const stopWords = new Set([
-            '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一个', '上', '也', '很', '到', '说', '要',
-            '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '但', '从', '来', '以', '得', '里', '那', '她', '他', '我们',
-            '他们', '你们', '这个', '这里', '这样', '这时', '这些', '这种', '这么', '这样', '这种', '这样', '这么', '这种', '这样',
-            '这么', '这种', '这样', '这么', '这种', '这样', '这么', '这种', '这样', '这么', '种', '而', '中', '于', '是的', '可以',
-            '与', '之', '等', '被', '后', '啊', '呀', '吧', '呢', '吗', '啦', '给', '把', '又', '还', '对', '但', '却', '让', '使',
-            '叫', '用', '拿', '哪', '怎', '什么', '为什么', '如何', '怎么', '多少', '几', '谁', '哪', '哪个', '哪些', '哪里', '哪儿'
-        ]);
-        
-        // 分词函数（简化版）
-        function segmentChineseText(text) {
-            // 移除标点符号和数字
-            const cleanedText = text.replace(/[0-9\.,\?\!;:"'\(\)\[\]\{\}~`@#\$%\^&\*_\+=<>\/\\\|—…《》]/g, ' ');
-            
-            // 按空白字符分割
-            const words = cleanedText.split(/\s+/);
-            
-            // 过滤停用词和单字
-            return words.filter(word => 
-                word.length > 1 && 
-                !stopWords.has(word) && 
-                !/\d/.test(word)
-            );
-        }
-        
-        // 统计词频
-        function countWordFrequency(words) {
-            const frequency = {};
-            
-            words.forEach(word => {
-                if (frequency[word]) {
-                    frequency[word]++;
-                } else {
-                    frequency[word] = 1;
-                }
-            });
-            
-            return frequency;
-        }
-        
-        // 获取词云数据
-        function getWordCloudData(frequency, maxWords = 80) {
-            const wordArray = Object.keys(frequency).map(word => ({
-                name: word,
-                value: frequency[word],
-                // 添加一些额外属性用于样式控制
-                textStyle: {
-                    fontFamily: 'Microsoft YaHei, Arial, sans-serif'
-                }
-            }));
-            
-            // 按词频降序排序
-            wordArray.sort((a, b) => b.value - a.value);
-            
-            // 限制返回的词数
-            return wordArray.slice(0, maxWords);
-        }
-        
-        // 初始化ECharts词云图
-        function initWordCloudChart(wordData, colorScheme = 'sci-fi', shape = 'circle', rotation = 'all') {
-            const chartDom = document.getElementById('wordCloudChart');
-            const chart = echarts.init(chartDom);
-            
-            // 定义不同配色方案
-            const colorSchemes = {
-                'sci-fi': ['#4da6ff', '#66b3ff', '#80c1ff', '#99ceff', '#b3dbff', '#cce9ff'],
-                'sunset': ['#ff6b6b', '#ff8e6b', '#ffb16b', '#ffd46b', '#fff76b', '#ffff6b'],
-                'earth': ['#33cc33', '#66cc66', '#99cc99', '#33cccc', '#66cccc', '#99cccc'],
-                'space': ['#9966ff', '#aa80ff', '#bb99ff', '#ccb3ff', '#ddccff', '#eee6ff'],
-                'ice': ['#a3d9ff', '#b3e0ff', '#c3e7ff', '#d3eeff', '#e3f5ff', '#f3fcff']
-            };
-            
-            const colors = colorSchemes[colorScheme] || colorSchemes['sci-fi'];
-            
-            // 定义旋转范围
-            let rotationRange = [-90, 90];
-            if (rotation === 'horizontal') {
-                rotationRange = [0, 0];
-            } else if (rotation === 'vertical') {
-                rotationRange = [90, 90];
-            } else if (rotation === 'none') {
-                rotationRange = [0, 0];
+        // 等待页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查ECharts是否加载成功
+            if (typeof echarts === 'undefined') {
+                document.getElementById('wordList').innerHTML = 
+                    '<div class="error-message">错误：ECharts库加载失败，请检查网络连接</div>';
+                return;
             }
             
-            const option = {
-                title: {
-                    text: '《流浪地球》词云图',
-                    subtext: '基于小说全文的高频词汇可视化',
-                    left: 'center',
-                    textStyle: {
-                        color: '#4da6ff',
-                        fontSize: 24,
-                        fontWeight: 'bold'
-                    },
-                    subtextStyle: {
-                        color: '#88c1ff',
-                        fontSize: 16
-                    }
-                },
-                tooltip: {
-                    show: true,
-                    formatter: function(params) {
-                        return `<div style="padding:5px;">
-                            <strong>${params.name}</strong><br/>
-                            出现次数: <span style="color:#ffcc66;font-weight:bold">${params.value}</span>
-                        </div>`;
-                    }
-                },
-                series: [{
-                    type: 'wordCloud',
-                    shape: shape,
-                    left: 'center',
-                    top: 'center',
-                    width: '90%',
-                    height: '90%',
-                    sizeRange: [20, 100],
-                    rotationRange: rotationRange,
-                    rotationStep: 45,
-                    gridSize: 10,
-                    drawOutOfBound: false,
-                    textStyle: {
-                        fontFamily: 'Microsoft YaHei, Arial, sans-serif',
-                        fontWeight: 'bold',
-                        color: function(params) {
-                            // 根据词频分配颜色
-                            const index = Math.floor(params.value % colors.length);
-                            return colors[index];
-                        }
-                    },
-                    emphasis: {
-                        focus: 'self',
-                        textStyle: {
-                            shadowBlur: 10,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    },
-                    data: wordData
-                }],
-                backgroundColor: 'rgba(5, 15, 30, 0)'
-            };
+            // 检查wordCloud是否注册
+            if (!echarts.graphic || !echarts.graphic.extendShape) {
+                document.getElementById('wordList').innerHTML = 
+                    '<div class="error-message">警告：WordCloud扩展可能未正确加载，尝试备用方案...</div>';
+                // 继续尝试，可能echarts-wordcloud已经注册了类型
+            }
             
-            chart.setOption(option);
-            
-            // 响应窗口大小变化
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
-            
-            return chart;
-        }
-        
-        // 更新词汇列表
-        function updateWordList(wordData) {
-            const wordListContainer = document.getElementById('wordList');
-            wordListContainer.innerHTML = '';
-            
-            wordData.forEach((word, index) => {
-                const wordItem = document.createElement('div');
-                wordItem.className = 'word-item';
-                
-                const rank = document.createElement('div');
-                rank.className = 'word-rank';
-                rank.textContent = `#${index + 1}`;
-                
-                const name = document.createElement('div');
-                name.className = 'word-name';
-                name.textContent = word.name;
-                
-                const count = document.createElement('div');
-                count.className = 'word-count';
-                count.textContent = `${word.value}次`;
-                
-                wordItem.appendChild(rank);
-                wordItem.appendChild(name);
-                wordItem.appendChild(count);
-                wordListContainer.appendChild(wordItem);
-            });
-            
-            // 更新统计信息
-            document.getElementById('totalWords').textContent = Object.values(wordFrequency).reduce((a, b) => a + b, 0);
-            document.getElementById('uniqueWords').textContent = Object.keys(wordFrequency).length;
-            document.getElementById('displayWords').textContent = wordData.length;
-            document.getElementById('maxFrequency').textContent = wordData.length > 0 ? wordData[0].value : 0;
-        }
-        
-        // 主程序
-        document.addEventListener('DOMContentLoaded', function() {
-            // 分词并统计词频
-            const words = segmentChineseText(novelText + extendedText);
-            const wordFrequency = countWordFrequency(words);
+            // 《流浪地球》小说高频词汇数据（预处理的）
+            const wordCloudData = [
+                {name: "地球", value: 286},
+                {name: "太阳", value: 178},
+                {name: "发动机", value: 165},
+                {name: "人类", value: 142},
+                {name: "时代", value: 128},
+                {name: "流浪", value: 112},
+                {name: "宇宙", value: 98},
+                {name: "天空", value: 95},
+                {name: "星空", value: 89},
+                {name: "地下城", value: 87},
+                {name: "木星", value: 85},
+                {name: "冰原", value: 82},
+                {name: "大海", value: 79},
+                {name: "发动机光柱", value: 76},
+                {name: "联合政府", value: 74},
+                {name: "氦闪", value: 72},
+                {name: "轨道", value: 68},
+                {name: "航行", value: 65},
+                {name: "加速", value: 63},
+                {name: "刹车", value: 61},
+                {name: "逃逸", value: 59},
+                {name: "行星", value: 57},
+                {name: "冰面", value: 55},
+                {name: "半球", value: 53},
+                {name: "光芒", value: 51},
+                {name: "温度", value: 49},
+                {name: "大陆", value: 47},
+                {name: "海岸", value: 45},
+                {name: "太平洋", value: 43},
+                {name: "近日点", value: 41},
+                {name: "远日点", value: 39},
+                {name: "变轨", value: 37},
+                {name: "引力", value: 35},
+                {name: "速度", value: 33},
+                {name: "距离", value: 31},
+                {name: "位置", value: 29},
+                {name: "方向", value: 27},
+                {name: "飞行", value: 25},
+                {name: "汽车", value: 23},
+                {name: "飞机", value: 21},
+                {name: "雪橇", value: 19},
+                {name: "旅行", value: 17},
+                {name: "孩子", value: 15},
+                {name: "老师", value: 13},
+                {name: "爸爸", value: 11},
+                {name: "妈妈", value: 9},
+                {name: "爷爷", value: 7},
+                {name: "灵儿", value: 5},
+                {name: "加代子", value: 3},
+                {name: "阿东", value: 1},
+                {name: "比邻星", value: 45},
+                {name: "半人马座", value: 42},
+                {name: "恒星", value: 40},
+                {name: "红巨星", value: 38},
+                {name: "灾变", value: 36},
+                {name: "爆炸", value: 34},
+                {name: "汽化", value: 32},
+                {name: "死亡", value: 30},
+                {name: "生命", value: 28},
+                {name: "生存", value: 26},
+                {name: "希望", value: 24},
+                {name: "恐惧", value: 22},
+                {name: "痛苦", value: 20},
+                {name: "爱情", value: 18},
+                {name: "家庭", value: 16},
+                {name: "孩子", value: 14},
+                {name: "父母", value: 12},
+                {name: "学校", value: 10},
+                {name: "教育", value: 8},
+                {name: "课程", value: 6},
+                {name: "哲学", value: 4},
+                {name: "科学", value: 2},
+                {name: "技术", value: 50},
+                {name: "力量", value: 48},
+                {name: "机器", value: 46},
+                {name: "推力", value: 44},
+                {name: "亿吨", value: 42},
+                {name: "燃料", value: 40},
+                {name: "山脉", value: 38},
+                {name: "消耗", value: 36},
+                {name: "亚洲", value: 34},
+                {name: "美洲", value: 32},
+                {name: "大陆", value: 30},
+                {name: "平原", value: 28},
+                {name: "高山", value: 26},
+                {name: "山峰", value: 24},
+                {name: "华北", value: 22},
+                {name: "上海", value: 20},
+                {name: "纽约", value: 18},
+                {name: "大西洋", value: 16},
+                {name: "海岸", value: 14},
+                {name: "冰面", value: 12},
+                {name: "奥运会", value: 10},
+                {name: "比赛", value: 8},
+                {name: "选手", value: 6},
+                {name: "驾驶", value: 4},
+                {name: "结婚", value: 2},
+                {name: "生育", value: 60},
+                {name: "孩子", value: 58},
+                {name: "家庭", value: 56},
+                {name: "爱情", value: 54},
+                {name: "亲情", value: 52},
+                {name: "友情", value: 50},
+                {name: "人类情感", value: 48}
+            ];
             
             // 初始设置
             let maxWords = 80;
             let currentColorScheme = 'sci-fi';
             let currentShape = 'circle';
             let currentRotation = 'all';
+            let chart = null;
             
-            // 获取初始词云数据
-            let wordData = getWordCloudData(wordFrequency, maxWords);
+            // 初始化词云图
+            function initWordCloud() {
+                const chartDom = document.getElementById('wordCloudChart');
+                
+                // 清空之前的图表
+                if (chart) {
+                    chart.dispose();
+                }
+                
+                // 初始化ECharts实例
+                chart = echarts.init(chartDom);
+                
+                // 获取当前显示的词汇数据
+                const displayData = wordCloudData.slice(0, maxWords);
+                
+                // 定义不同配色方案
+                const colorSchemes = {
+                    'sci-fi': ['#4da6ff', '#66b3ff', '#80c1ff', '#99ceff', '#b3dbff', '#cce9ff'],
+                    'sunset': ['#ff6b6b', '#ff8e6b', '#ffb16b', '#ffd46b', '#fff76b', '#ffff6b'],
+                    'earth': ['#33cc33', '#66cc66', '#99cc99', '#33cccc', '#66cccc', '#99cccc'],
+                    'space': ['#9966ff', '#aa80ff', '#bb99ff', '#ccb3ff', '#ddccff', '#eee6ff'],
+                    'ice': ['#a3d9ff', '#b3e0ff', '#c3e7ff', '#d3eeff', '#e3f5ff', '#f3fcff']
+                };
+                
+                const colors = colorSchemes[currentColorScheme] || colorSchemes['sci-fi'];
+                
+                // 定义旋转范围
+                let rotationRange = [-90, 90];
+                let rotationStep = 45;
+                
+                if (currentRotation === 'horizontal') {
+                    rotationRange = [0, 0];
+                    rotationStep = 0;
+                } else if (currentRotation === 'none') {
+                    rotationRange = [0, 0];
+                    rotationStep = 0;
+                }
+                
+                // 配置选项
+                const option = {
+                    title: {
+                        text: '《流浪地球》词云图',
+                        subtext: '基于小说全文的高频词汇可视化',
+                        left: 'center',
+                        textStyle: {
+                            color: '#4da6ff',
+                            fontSize: 24,
+                            fontWeight: 'bold'
+                        },
+                        subtextStyle: {
+                            color: '#88c1ff',
+                            fontSize: 16
+                        }
+                    },
+                    tooltip: {
+                        show: true,
+                        formatter: function(params) {
+                            return `<div style="padding:5px;">
+                                <strong>${params.name}</strong><br/>
+                                出现次数: <span style="color:#ffcc66;font-weight:bold">${params.value}</span>
+                            </div>`;
+                        }
+                    },
+                    series: [{
+                        type: 'wordCloud',
+                        shape: currentShape,
+                        left: 'center',
+                        top: 'center',
+                        width: '90%',
+                        height: '90%',
+                        sizeRange: [20, 100],
+                        rotationRange: rotationRange,
+                        rotationStep: rotationStep,
+                        gridSize: 10,
+                        drawOutOfBound: false,
+                        textStyle: {
+                            fontFamily: 'Microsoft YaHei, Arial, sans-serif',
+                            fontWeight: 'bold',
+                            color: function(params) {
+                                // 根据词频分配颜色
+                                const index = Math.floor(params.dataIndex % colors.length);
+                                return colors[index];
+                            }
+                        },
+                        emphasis: {
+                            focus: 'self',
+                            textStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        data: displayData
+                    }],
+                    backgroundColor: 'rgba(5, 15, 30, 0)'
+                };
+                
+                // 设置配置项
+                chart.setOption(option);
+                
+                // 更新词汇列表
+                updateWordList(displayData);
+                
+                // 响应窗口大小变化
+                window.addEventListener('resize', function() {
+                    chart.resize();
+                });
+                
+                // 添加图表点击事件
+                chart.on('click', function(params) {
+                    if (params.componentType === 'series' && params.seriesType === 'wordCloud') {
+                        alert(`词汇: ${params.name}\n出现次数: ${params.value}`);
+                    }
+                });
+            }
             
-            // 初始化图表和词汇列表
-            let chart = initWordCloudChart(wordData, currentColorScheme, currentShape, currentRotation);
-            updateWordList(wordData);
+            // 更新词汇列表
+            function updateWordList(wordData) {
+                const wordListContainer = document.getElementById('wordList');
+                wordListContainer.innerHTML = '';
+                
+                wordData.forEach((word, index) => {
+                    const wordItem = document.createElement('div');
+                    wordItem.className = 'word-item';
+                    
+                    const rank = document.createElement('div');
+                    rank.className = 'word-rank';
+                    rank.textContent = `#${index + 1}`;
+                    
+                    const name = document.createElement('div');
+                    name.className = 'word-name';
+                    name.textContent = word.name;
+                    
+                    const count = document.createElement('div');
+                    count.className = 'word-count';
+                    count.textContent = `${word.value}次`;
+                    
+                    wordItem.appendChild(rank);
+                    wordItem.appendChild(name);
+                    wordItem.appendChild(count);
+                    
+                    // 添加点击事件
+                    wordItem.addEventListener('click', function() {
+                        alert(`词汇: ${word.name}\n出现次数: ${word.value}\n排名: ${index + 1}`);
+                    });
+                    
+                    wordListContainer.appendChild(wordItem);
+                });
+                
+                // 更新统计信息
+                const totalWords = wordCloudData.reduce((sum, word) => sum + word.value, 0);
+                document.getElementById('totalWords').textContent = totalWords;
+                document.getElementById('uniqueWords').textContent = wordCloudData.length;
+                document.getElementById('displayWords').textContent = wordData.length;
+                document.getElementById('maxFrequency').textContent = wordData.length > 0 ? wordData[0].value : 0;
+            }
             
             // 绑定控制事件
             const maxWordsSlider = document.getElementById('maxWords');
@@ -879,15 +738,12 @@
             
             // 更新词云
             function updateWordCloud() {
-                wordData = getWordCloudData(wordFrequency, maxWords);
-                chart.dispose();
-                chart = initWordCloudChart(wordData, currentColorScheme, currentShape, currentRotation);
-                updateWordList(wordData);
+                maxWordsValue.textContent = maxWords;
+                initWordCloud();
             }
             
             maxWordsSlider.addEventListener('input', function() {
                 maxWords = parseInt(this.value);
-                maxWordsValue.textContent = maxWords;
                 updateWordCloud();
             });
             
@@ -906,14 +762,57 @@
                 updateWordCloud();
             });
             
-            // 添加一些交互效果
-            const wordItems = document.querySelectorAll('.word-item');
-            wordItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const wordName = this.querySelector('.word-name').textContent;
-                    alert(`你点击了词汇: ${wordName}\n在《流浪地球》中出现 ${this.querySelector('.word-count').textContent}`);
-                });
-            });
+            // 初始化词云
+            try {
+                initWordCloud();
+                
+                // 添加备用方案提示
+                const wordListContainer = document.getElementById('wordList');
+                const loadingElement = wordListContainer.querySelector('.loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('初始化词云图失败:', error);
+                
+                // 显示错误信息
+                document.getElementById('wordList').innerHTML = 
+                    `<div class="error-message">
+                        <p>词云图初始化失败: ${error.message}</p>
+                        <p>尝试使用备用方案...</p>
+                    </div>`;
+                
+                // 尝试使用简单的div显示词汇
+                setTimeout(function() {
+                    const simpleData = wordCloudData.slice(0, 20);
+                    let simpleHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
+                    simpleData.forEach(word => {
+                        const size = Math.max(14, Math.min(40, word.value / 5));
+                        simpleHTML += `
+                            <div style="
+                                padding: 8px 12px;
+                                background: rgba(77, 166, 255, 0.2);
+                                border-radius: 20px;
+                                font-size: ${size}px;
+                                color: #4da6ff;
+                                border: 1px solid rgba(77, 166, 255, 0.4);
+                            ">
+                                ${word.name} (${word.value})
+                            </div>
+                        `;
+                    });
+                    simpleHTML += '</div>';
+                    
+                    document.getElementById('wordCloudChart').innerHTML = `
+                        <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                            <h3 style="color:#ffcc66;margin-bottom:20px;">备用显示方案</h3>
+                            ${simpleHTML}
+                            <p style="color:#88c1ff;margin-top:20px;">由于WordCloud扩展问题，使用简化显示</p>
+                        </div>
+                    `;
+                }, 1000);
+            }
         });
     </script>
 </body>
