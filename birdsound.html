@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鸟语解码器 | 声音新景观</title>
+    <style>
+        :root {
+            --primary: #00ff9d;
+            --secondary: #00b8ff;
+            --bg: #05080a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --text: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace; /* 科技感字体 */
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 背景画布 */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            filter: blur(1px);
+        }
+
+        /* 扫描网格覆盖层 */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(transparent 95%, rgba(0, 255, 157, 0.1) 96%),
+                linear-gradient(90deg, transparent 95%, rgba(0, 255, 157, 0.1) 96%);
+            background-size: 40px 40px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* 主UI容器 */
+        .interface {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        /* 交互按钮 */
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--primary);
+            font-size: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem auto;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .record-btn::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid var(--primary);
+            opacity: 0;
+            transform: scale(1);
+            transition: all 0.5s;
+        }
+
+        .record-btn:hover {
+            background: rgba(0, 255, 157, 0.2);
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .record-btn.recording {
+            background: rgba(255, 50, 50, 0.2);
+            border-color: #ff3333;
+            color: #ff3333;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .record-btn.recording::after {
+            animation: ripple 1.5s infinite;
+        }
+
+        /* 数据展示区 */
+        .data-display {
+            min-height: 120px;
+            text-align: left;
+            border-top: 1px dashed rgba(255,255,255,0.2);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .data-display.active {
+            opacity: 1;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .value.highlight {
+            color: var(--primary);
+        }
+
+        .translation-box {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--secondary);
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        /* 动画定义 */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 50, 50, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 50, 50, 0); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* 加载条 */
+        .loader {
+            width: 0%;
+            height: 2px;
+            background: var(--primary);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: width 0.2s;
+        }
+
+        /* 状态文字 */
+        #status-text {
+            margin-bottom: 1rem;
+            height: 1.2rem;
+            font-size: 0.9rem;
+            color: var(--secondary);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="grid-overlay"></div>
+    <canvas id="visualizer"></canvas>
+
+    <div class="interface">
+        <h1>鸟语解码器</h1>
+        <div class="subtitle">BIRD LANGUAGE DECODER v2.0</div>
+        
+        <div id="status-text">系统待机 // 等待音频输入...</div>
+
+        <button class="record-btn" id="recordBtn">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </button>
+
+        <div class="data-display" id="dataDisplay">
+            <div class="data-row">
+                <span class="label">Target Species (物种)</span>
+                <span class="value" id="species-val">---</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Frequency (频率特征)</span>
+                <span class="value" id="freq-val">---</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Emotional State (情绪)</span>
+                <span class="value highlight" id="emotion-val">---</span>
+            </div>
+            
+            <div class="translation-box" id="translation-text">
+                [ 等待数据流... ]
+            </div>
+        </div>
+        
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <script>
+        // --- 配置与数据 ---
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+        const btn = document.getElementById('recordBtn');
+        const statusText = document.getElementById('status-text');
+        const loader = document.getElementById('loader');
+        const dataDisplay = document.getElementById('dataDisplay');
+        
+        // 模拟的鸟类数据库
+        const birdDatabase = [
+            {
+                name: "麻雀 (Passer montanus)",
+                freq: "2.5kHz - 5kHz",
+                emotion: "兴奋 / 召唤",
+                color: "#ffaa00",
+                message: "“快来这里！这里有好多面包屑，没有危险，快来！”"
+            },
+            {
+                name: "乌鸦 (Corvus)",
+                freq: "300Hz - 800Hz",
+                emotion: "警惕 / 警告",
+                color: "#ff3333",
+                message: "“注意！有入侵者（人类）进入领地，保持距离。”"
+            },
+            {
+                name: "大山雀 (Parus major)",
+                freq: "3kHz - 6kHz",
+                emotion: "求偶 / 展示",
+                color: "#00ff9d",
+                message: "“听我的声音多么洪亮！我是这片林子里最强壮的。”"
+            },
+            {
+                name: "喜鹊 (Pica pica)",
+                freq: "1.2kHz - 3kHz",
+                emotion: "社交 / 闲聊",
+                color: "#00b8ff",
+                message: "“那是我的树枝！别碰它，我们昨天就占领这里了。”"
+            }
+        ];
+
+        // --- 视觉效果逻辑 ---
+        let width, height;
+        let time = 0;
+        let isRecording = false;
+        let amplitude = 0.5; // 波浪幅度
+        let targetAmplitude = 0.5;
+        let speed = 0.02;
+        let lines = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initLines();
+        }
+
+        function initLines() {
+            lines = [];
+            const lineCount = 40;
+            for(let i = 0; i < lineCount; i++) {
+                lines.push({
+                    y: (height / lineCount) * i,
+                    offset: Math.random() * Math.PI * 2,
+                    speed: 0.005 + Math.random() * 0.01,
+                    color: `hsla(${140 + i * 2}, 80%, 50%, 0.3)`
+                });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(5, 8, 10, 0.2)'; // 拖影效果
+            ctx.fillRect(0, 0, width, height);
+
+            // 平滑过渡振幅
+            amplitude += (targetAmplitude - amplitude) * 0.1;
+            time += speed;
+
+            lines.forEach((line, index) => {
+                ctx.beginPath();
+                ctx.strokeStyle = isRecording ? 
+                    `hsl(${Math.random() * 50 + 120}, 90%, 60%)` : // 录音时颜色闪烁 
+                    line.color;
+                ctx.lineWidth = isRecording ? 2 : 1;
+
+                for (let x = 0; x <= width; x += 20) {
+                    // 核心波浪算法：叠加多个正弦波
+                    const distFromCenter = Math.abs(x - width/2) / (width/2);
+                    const scaleFactor = 1 - distFromCenter; // 中间高两边低
+                    
+                    // 噪声函数模拟
+                    const noise = isRecording ? (Math.random() - 0.5) * 30 : 0;
+
+                    const y = line.y + 
+                              Math.sin(x * 0.01 + time + line.offset) * 50 * amplitude * scaleFactor +
+                              Math.sin(x * 0.03 - time * 2) * 20 * amplitude + noise;
+                    
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        // --- 交互逻辑 ---
+        function typeWriter(text, elementId, speed = 30) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = "";
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        function resetUI() {
+             document.getElementById('species-val').innerText = "---";
+             document.getElementById('freq-val').innerText = "---";
+             document.getElementById('emotion-val').innerText = "---";
+             document.getElementById('emotion-val').style.color = "#e0e0e0";
+             document.getElementById('translation-text').innerText = "[ 等待数据流... ]";
+             dataDisplay.classList.remove('active');
+             loader.style.width = "0%";
+        }
+
+        function simulateAnalysis() {
+            if (isRecording) return;
+            
+            isRecording = true;
+            btn.classList.add('recording');
+            targetAmplitude = 4.0; // 激活动画
+            speed = 0.1;
+            statusText.innerText = "正在捕获声波特征...";
+            resetUI();
+
+            // 1. 录音阶段 (2秒)
+            setTimeout(() => {
+                statusText.innerText = "上传云端解析中...";
+                targetAmplitude = 1.0;
+                speed = 0.02;
+                
+                // 进度条动画
+                loader.style.width = "100%";
+                
+                // 2. 解析完成 (再过1.5秒)
+                setTimeout(() => {
+                    finishAnalysis();
+                }, 1500);
+
+            }, 2500);
+        }
+
+        function finishAnalysis() {
+            isRecording = false;
+            btn.classList.remove('recording');
+            targetAmplitude = 0.5;
+            loader.style.width = "0%";
+            statusText.innerText = "解码成功 | 语义匹配完成";
+            
+            // 随机选择一只鸟
+            const bird = birdDatabase[Math.floor(Math.random() * birdDatabase.length)];
+            
+            dataDisplay.classList.add('active');
+            
+            // 填充数据
+            typeWriter(bird.name, 'species-val', 50);
+            document.getElementById('freq-val').innerText = bird.freq;
+            
+            const emoVal = document.getElementById('emotion-val');
+            emoVal.innerText = bird.emotion;
+            emoVal.style.color = bird.color;
+            
+            typeWriter(bird.message, 'translation-text', 30);
+        }
+
+        // 初始化
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
+
+        btn.addEventListener('click', simulateAnalysis);
+
+    </script>
+</body>
+</html>
