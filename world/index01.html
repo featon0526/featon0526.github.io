@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>世界GDP排名</title>
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body>
+   <div>
+     <!-- 页面头部盒子 -->
+    <header style="display: flex;">
+      <h1 style="margin-left: 150px;">全球经济快照<img src="./img/s_ico2.png" style="margin-left: 10px;width: 20px;height: 20px;transform: rotate(-90deg);"><a href="./index0101.html" style="font-size: 20px;color: crimson;">(点击查看)</a></h1>
+      <h1 style="display: flex;justify-content: center;width: 60%;">数据可视化-世界GDP排名</h1>
+      <div class="showTime"></div>
+    </header>
+    <!-- 页面主体盒子 -->
+    <main class="mainbox">
+      <!-- left -->
+      <div class="column">
+        <section class="panel bar">
+          <h2>柱状图-世界GDP排名
+            <!-- <a href="#">2019</a>
+            <a href="#">2020</a> -->
+          </h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+        <section class="panel line">
+          <h2>折线图-世界GDP排名</h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+        <section class="panel pie">
+          <h2>饼形图-世界GDP排名</h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+      </div>
+      <!-- main -->
+      <div class="column">
+        <!-- no模块制作 -->
+        <div class="no">
+          <div class="no-hd">
+            <ul>
+              <li>2</li>
+              <li>17.96万亿</li>
+            </ul>
+          </div>
+          <div class="no-bd">
+            <ul>
+              <li>世界GDP排名（中国）---2022年数据</li>
+              <li>GDP</li>
+            </ul>
+          </div>
+        </div>
+        <!-- 地图模块 -->
+        <div class="map">
+          <div class="map1"></div>
+          <div class="map2"></div>
+          <div class="map3"></div>
+          <div class="chart"></div>
+        </div>
+      </div>
+      <!-- right -->
+      <div class="column">
+        <section class="panel bar2">
+          <h2>柱状图-技能掌握</h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+        <section class="panel line2">
+          <h2>动态图---世界GDP排名</h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+        <section class="panel pie2">
+          <h2>饼型图-地区分布</h2>
+          <div class="chart"></div>
+          <div class="panel-footer"></div>
+        </section>
+      </div>
+    </main>
+    <script src="./js/flexible.js"></script>
+    <script src="./js/echarts.min.js"></script>
+    <script src="./js/china.js"></script>
+    <script src="./js/myMap.js"></script>
+    <script src="./js/jquery.js"></script>
+    <script src="./js/index.js"></script>
+    <script>
+      var t = null;
+      t = setTimeout(time, 1000);
+      function time() {
+        clearTimeout(t); // 清除定时器
+        var dt = new Date(); // 获取当前时间
+        var y = dt.getFullYear(); // 获取年
+        var mt = dt.getMonth() + 1; // 获取月
+        var day = dt.getDate(); // 获取日
+        var h = dt.getHours(); // 获取时
+        var m = dt.getMinutes() < 10 ? '0' + dt.getMinutes() : dt.getMinutes(); // 获取分
+        var s = dt.getSeconds() < 10 ? '0' + dt.getSeconds() : dt.getSeconds(); // 获取秒
+        document.querySelector('.showTime').innerHTML = '当前时间：' + y + '年' + mt + '月' + day + '日-' + h + '时' + m + '分' + s + '秒';
+        t = setTimeout(time, 1000); // 设定定时器，循环运行
+      }
+    </script>
+   </div>
+  </body>
+</html>
