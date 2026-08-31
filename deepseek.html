@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>欣然的手指滤镜 · 赛博朋克AR</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+      background-color: black;
+      color: white;
+    }
+    #video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 0;
+    }
+    #three-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #hud-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
+      pointer-events: none;
+    }
+    #ui-panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(0, 10, 20, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 16px;
+      padding: 16px 20px;
+      min-width: 180px;
+      color: #b0f0ff;
+      font-size: 14px;
+      box-shadow: 0 0 30px rgba(0, 180, 255, 0.2);
+      pointer-events: auto;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+    }
+    #ui-panel.hidden {
+      opacity: 0;
+      transform: translateY(-20px);
+      pointer-events: none;
+    }
+    #ui-panel .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #b0f0ff;
+      text-shadow: 0 0 12px #00aaff;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      padding-bottom: 6px;
+    }
+    .control-group {
+      margin-bottom: 12px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #a0d0ff;
+      margin-bottom: 4px;
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+      background: transparent;
+      accent-color: #00ddff;
+      cursor: pointer;
+    }
+    #status-msg {
+      font-size: 13px;
+      color: #ffaa88;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 10px;
+      border-radius: 40px;
+      border-left: 3px solid #ff8844;
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    #status-msg.success {
+      color: #88ffaa;
+      border-left-color: #88ffaa;
+    }
+    #status-msg.error {
+      color: #ff6688;
+      border-left-color: #ff4466;
+    }
+    .hint {
+      font-size: 12px;
+      color: #6688aa;
+      margin-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 8px;
+      text-align: right;
+    }
+    @media (max-width: 600px) {
+      #ui-panel { top: 12px; left: 12px; padding: 12px 14px; min-width: 140px; }
+      #ui-panel .title { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline></video>
+  <div id="three-canvas"></div>
+  <canvas id="hud-canvas"></canvas>
+
+  <div id="ui-panel">
+    <div class="title">✦ 欣然的手指滤镜</div>
+    <div class="control-group">
+      <label>滤镜强度 <span id="intensity-val">1.0</span></label>
+      <input type="range" id="intensity-slider" min="0.0" max="1.6" step="0.01" value="1.0">
+    </div>
+    <div class="control-group">
+      <label>辉光强度 <span id="glow-val">0.8</span></label>
+      <input type="range" id="glow-slider" min="0.0" max="1.5" step="0.01" value="0.8">
+    </div>
+    <div id="status-msg" class="success">⏳ 启动摄像头...</div>
+    <div class="hint">🖐️ 双手 · 霓虹滤镜</div>
+  </div>
+
+  <!-- 使用 type="module" 直接引入所有依赖 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.126.0/build/three.module.js",
+        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm/vision_bundle.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+
+    // --- DOM refs ---
+    const video = document.getElementById('video');
+    const threeContainer = document.getElementById('three-canvas');
+    const hudCanvas = document.getElementById('hud-canvas');
+    const statusMsg = document.getElementById('status-msg');
+    const intensitySlider = document.getElementById('intensity-slider');
+    const glowSlider = document.getElementById('glow-slider');
+    const intensityVal = document.getElementById('intensity-val');
+    const glowVal = document.getElementById('glow-val');
+    const uiPanel = document.getElementById('ui-panel');
+
+    // --- UI 自动隐藏 ---
+    let uiTimer = null;
+    const showUI = () => {
+      uiPanel.classList.remove('hidden');
+      clearTimeout(uiTimer);
+      uiTimer = setTimeout(() => uiPanel.classList.add('hidden'), 5000);
+    };
+    document.addEventListener('mousemove', showUI);
+    document.addEventListener('click', showUI);
+    document.addEventListener('touchstart', showUI);
+    document.addEventListener('keydown', showUI);
+    showUI();
+
+    // --- 状态管理 ---
+    let cameraReady = false;
+    let handLandmarker = null;
+    let lastResults = null; // 存储上一帧结果用于丢失保护
+    let frameCounter = 0;
+    let handsData = { left: null, right: null }; // 存储当前帧手部关键点 (屏幕坐标)
+
+    // --- Three.js 场景 ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.Camera();
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    threeContainer.appendChild(renderer.domElement);
+
+    // 用于滤镜面的纹理 (从video更新)
+    const videoTexture = new THREE.VideoTexture(video);
+    videoTexture.minFilter = THREE.LinearFilter;
+    videoTexture.magFilter = THREE.LinearFilter;
+    videoTexture.format = THREE.RGBAFormat;
+
+    // --- 创建两个滤镜面 (四边形) ---
+    // 使用 BufferGeometry 动态更新顶点
+    function createFilterGeometry() {
+      const geom = new THREE.BufferGeometry();
+      const vertices = new Float32Array([
+        -1, -1, 0,  // 0
+         1, -1, 0,  // 1
+         1,  1, 0,  // 2
+        -1,  1, 0   // 3
+      ]);
+      const indices = [0, 1, 2, 0, 2, 3];
+      const uvs = new Float32Array([
+        0, 1,
+        1, 1,
+        1, 0,
+        0, 0
+      ]);
+      geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+      geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+      geom.setIndex(indices);
+      geom.computeVertexNormals();
+      return geom;
+    }
+
+    // 热成像着色器 (暖色高对比)
+    const heatVertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+    const heatFragmentShader = `
+      uniform sampler2D videoTex;
+      uniform float intensity;
+      varying vec2 vUv;
+      void main() {
+        vec4 color = texture2D(videoTex, vUv);
+        float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+        float heat = gray * intensity;
+        vec3 hot = vec3(heat * 1.8, heat * 0.6, heat * 0.1);
+        hot = clamp(hot, 0.0, 1.0);
+        // 边缘增强
+        float edge = abs(vUv.x - 0.5) * 2.0 + abs(vUv.y - 0.5) * 2.0;
+        hot += vec3(0.2, 0.05, 0.0) * (1.0 - edge);
+        gl_FragColor = vec4(hot, 1.0);
+      }
+    `;
+
+    // 扫描线黑白高反差
+    const scanVertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+    const scanFragmentShader = `
+      uniform sampler2D videoTex;
+      uniform float intensity;
+      varying vec2 vUv;
+      void main() {
+        vec4 color = texture2D(videoTex, vUv);
+        float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+        float highContrast = smoothstep(0.3, 0.7, gray) * intensity;
+        // 扫描线
+        float scan = sin(vUv.y * 400.0) * 0.2 + 0.8;
+        vec3 finalColor = vec3(highContrast * scan, highContrast * scan * 0.5, highContrast * scan * 0.8);
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    function createFilterMesh(geometry, vertexShader, fragmentShader, colorUniform) {
+      const material = new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          videoTex: { value: videoTexture },
+          intensity: { value: 1.0 },
+          glowColor: { value: new THREE.Color(colorUniform) }
+        },
+        transparent: false,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        depthTest: false,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.frustumCulled = false;
+      return mesh;
+    }
+
+    const geom = createFilterGeometry();
+    // thumb-index 热成像
+    const heatMesh = createFilterMesh(geom, heatVertexShader, heatFragmentShader, '#00ffff');
+    // index-pinky 扫描
+    const scanMesh = createFilterMesh(geom, scanVertexShader, scanFragmentShader, '#ff44ff');
+
+    // 初始放在屏幕外
+    heatMesh.visible = false;
+    scanMesh.visible = false;
+    scene.add(heatMesh);
+    scene.add(scanMesh);
+
+    // --- HUD Canvas 2D ---
+    const ctx = hudCanvas.getContext('2d');
+    let hudWidth = window.innerWidth;
+    let hudHeight = window.innerHeight;
+
+    function resizeHud() {
+      hudCanvas.width = window.innerWidth;
+      hudCanvas.height = window.innerHeight;
+      hudWidth = hudCanvas.width;
+      hudHeight = hudCanvas.height;
+    }
+    resizeHud();
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      resizeHud();
+    });
+
+    // --- 辅助函数: 屏幕坐标映射 (镜像处理) ---
+    function landmarkToScreen(landmark, width, height) {
+      // 前置摄像头镜像: x 翻转
+      const x = (1 - landmark.x) * width;
+      const y = landmark.y * height;
+      return { x, y };
+    }
+
+    // --- MediaPipe 手部识别 ---
+    async function initHandLandmarker() {
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
+        );
+        handLandmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            delegate: 'GPU'
+          },
+          numHands: 2,
+          runningMode: 'VIDEO',
+        });
+        statusMsg.textContent = '✅ 模型加载成功，等待摄像头...';
+        statusMsg.className = 'success';
+      } catch (e) {
+        console.error('HandLandmarker init error:', e);
+        statusMsg.textContent = `❌ 模型加载失败: ${e.message}`;
+        statusMsg.className = 'error';
+      }
+    }
+
+    // --- 摄像头启动 ---
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+        video.srcObject = stream;
+        await video.play();
+        cameraReady = true;
+        statusMsg.textContent = '📷 摄像头已开启，请展示双手';
+        statusMsg.className = 'success';
+        // 视频纹理更新
+        videoTexture.needsUpdate = true;
+      } catch (e) {
+        console.error('Camera error:', e);
+        statusMsg.textContent = `❌ 摄像头错误: ${e.message}`;
+        statusMsg.className = 'error';
+        cameraReady = false;
+      }
+    }
+
+    // --- 平滑滤波器 (指数平滑) ---
+    class SmoothFilter {
+      constructor(alpha = 0.7) {
+        this.alpha = alpha;
+        this.val = null;
+      }
+      update(v) {
+        if (this.val === null) { this.val = v; return v; }
+        this.val = this.alpha * v + (1 - this.alpha) * this.val;
+        return this.val;
+      }
+      reset() { this.val = null; }
+    }
+
+    // 为三个控制点分别维护平滑器 (左右手各3个点)
+    // 使用简单对象存储
+    const smoothPoints = {};
+
+    function getSmoothKey(hand, lmIndex) {
+      return `${hand}_${lmIndex}`;
+    }
+
+    function smoothLandmark(hand, lmIndex, rawPoint) {
+      const key = getSmoothKey(hand, lmIndex);
+      if (!smoothPoints[key]) {
+        smoothPoints[key] = new SmoothFilter(0.65);
+      }
+      const filtered = smoothPoints[key].update(rawPoint);
+      return filtered;
+    }
+
+    // 丢失保护: 保留上一帧0.5s (这里用帧计数简单实现)
+    let frameLostCount = 0;
+    const MAX_LOST_FRAMES = 15; // 约 0.5s (30fps)
+
+    // --- 更新滤镜面顶点 ---
+    function updateFilterMeshes(hands, intensity, glow) {
+      // hands: { left: {4:{x,y},8:{x,y},20:{x,y}}, right: {...} }
+      const left = hands.left;
+      const right = hands.right;
+
+      // 如果任一手缺失，隐藏面
+      if (!left || !right) {
+        heatMesh.visible = false;
+        scanMesh.visible = false;
+        return;
+      }
+
+      // 获取四个控制点 (左右手 4,8,20)
+      const pL4 = left[4], pL8 = left[8], pL20 = left[20];
+      const pR4 = right[4], pR8 = right[8], pR20 = right[20];
+      if (!pL4 || !pL8 || !pL20 || !pR4 || !pR8 || !pR20) {
+        heatMesh.visible = false;
+        scanMesh.visible = false;
+        return;
+      }
+
+      // 转换为 Three.js 坐标 (NDC: -1..1)
+      function toNDC(p) {
+        return { x: (p.x / hudWidth) * 2 - 1, y: -(p.y / hudHeight) * 2 + 1 };
+      }
+
+      const ndcL4 = toNDC(pL4), ndcL8 = toNDC(pL8), ndcL20 = toNDC(pL20);
+      const ndcR4 = toNDC(pR4), ndcR8 = toNDC(pR8), ndcR20 = toNDC(pR20);
+
+      // 更新两个面: 4-8 (热成像) , 8-20 (扫描)
+      // 四边形顶点顺序: 左上, 右上, 右下, 左下
+      // 面1: 左4, 右4, 右8, 左8
+      const posAttr1 = heatMesh.geometry.attributes.position;
+      const posArray1 = posAttr1.array;
+      // 左上 (L4), 右上 (R4), 右下 (R8), 左下 (L8)
+      posArray1[0] = ndcL4.x; posArray1[1] = ndcL4.y; posArray1[2] = 0;
+      posArray1[3] = ndcR4.x; posArray1[4] = ndcR4.y; posArray1[5] = 0;
+      posArray1[6] = ndcR8.x; posArray1[7] = ndcR8.y; posArray1[8] = 0;
+      posArray1[9] = ndcL8.x; posArray1[10] = ndcL8.y; posArray1[11] = 0;
+      posAttr1.needsUpdate = true;
+      heatMesh.geometry.computeVertexNormals();
+      heatMesh.visible = true;
+      heatMesh.material.uniforms.intensity.value = intensity;
+
+      // 面2: 左8, 右8, 右20, 左20
+      const posAttr2 = scanMesh.geometry.attributes.position;
+      const posArray2 = posAttr2.array;
+      posArray2[0] = ndcL8.x; posArray2[1] = ndcL8.y; posArray2[2] = 0;
+      posArray2[3] = ndcR8.x; posArray2[4] = ndcR8.y; posArray2[5] = 0;
+      posArray2[6] = ndcR20.x; posArray2[7] = ndcR20.y; posArray2[8] = 0;
+      posArray2[9] = ndcL20.x; posArray2[10] = ndcL20.y; posArray2[11] = 0;
+      posAttr2.needsUpdate = true;
+      scanMesh.geometry.computeVertexNormals();
+      scanMesh.visible = true;
+      scanMesh.material.uniforms.intensity.value = intensity;
+    }
+
+    // --- HUD 绘制 ---
+    function drawHUD(hands, glowIntensity) {
+      ctx.clearRect(0, 0, hudWidth, hudHeight);
+      if (!hands.left || !hands.right) return;
+
+      const left = hands.left;
+      const right = hands.right;
+      const allPoints = { left, right };
+      
+      // 绘制骨架 (21点)
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.25)';
+      ctx.fillStyle = 'rgba(0, 200, 255, 0.6)';
+      
+      // 为了简化，只绘制手指连线 (简单骨架)
+      const drawHandSkeleton = (hand, color) => {
+        const indices = [0,1,2,3,4, 0,5,6,7,8, 5,9,10,11,12, 9,13,14,15,16, 13,17,18,19,20];
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        // 连接指尖到手掌 (仅示意)
+        // 绘制所有点
+        for (let i = 0; i < 21; i++) {
+          const p = hand[i];
+          if (!p) continue;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+          ctx.fillStyle = i === 4 || i === 8 || i === 20 ? '#ffdd44' : 'rgba(100,200,255,0.4)';
+          ctx.fill();
+          // 控制点更大更亮
+          if (i === 4 || i === 8 || i === 20) {
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 18 * glowIntensity;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 7, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+      };
+
+      drawHandSkeleton(left, 'rgba(0, 255, 200, 0.3)');
+      drawHandSkeleton(right, 'rgba(255, 100, 200, 0.3)');
+
+      // 绘制三条控制连线 (4-4, 8-8, 20-20) 霓虹色
+      const colors = ['#00ffff', '#ff44ff', '#ffaa00'];
+      const pairs = [
+        [4, 4, '#00ffff'],
+        [8, 8, '#ff44ff'],
+        [20, 20, '#ffaa00']
+      ];
+      pairs.forEach(([lIdx, rIdx, color]) => {
+        const pL = left[lIdx];
+        const pR = right[rIdx];
+        if (!pL || !pR) return;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 20 * glowIntensity;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(pL.x, pL.y);
+        ctx.lineTo(pR.x, pR.y);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+
+      // 蝴蝶光效 (简单粒子)
+      const butterflyCount = 28;
+      const time = Date.now() / 1000;
+      for (let i = 0; i < butterflyCount; i++) {
+        const angle = time * 0.5 + i * 1.2;
+        const radius = 120 + Math.sin(time + i) * 50;
+        const cx = (left[8]?.x || hudWidth/2) + Math.sin(angle) * radius * 0.3;
+        const cy = (left[8]?.y || hudHeight/2) + Math.cos(angle*0.7) * radius * 0.2;
+        ctx.fillStyle = `hsla(${i*20 + 200}, 80%, 60%, 0.15)`;
+        ctx.shadowColor = `hsl(${i*20 + 200}, 80%, 60%)`;
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6 + Math.sin(time + i)*3, 0, Math.PI*2);
+        ctx.fill();
+        // 翅膀
+        ctx.beginPath();
+        ctx.ellipse(cx-8, cy-4, 8, 4, angle*0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx+8, cy-4, 8, 4, -angle*0.2, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+
+    // --- 主循环 (识别 + 渲染) ---
+    async function detectLoop() {
+      if (!cameraReady || !handLandmarker) {
+        requestAnimationFrame(detectLoop);
+        return;
+      }
+
+      try {
+        const results = await handLandmarker.detectForVideo(video, performance.now());
+        let currentHands = { left: null, right: null };
+
+        if (results.landmarks && results.landmarks.length > 0) {
+          // 最多两只手
+          const handedness = results.handednesses || [];
+          const landmarks = results.landmarks;
+
+          for (let i = 0; i < Math.min(landmarks.length, 2); i++) {
+            const lm = landmarks[i];
+            const handType = handedness[i]?.[0]?.categoryName || 'Unknown';
+            const screenPoints = {};
+            // 只提取 4,8,20
+            [4,8,20].forEach(idx => {
+              const p = lm[idx];
+              if (p) {
+                const sp = landmarkToScreen(p, hudWidth, hudHeight);
+                // 平滑
+                const key = `${handType}_${idx}`;
+                const filtered = smoothLandmark(handType, idx, sp);
+                screenPoints[idx] = filtered;
+              }
+            });
+            if (Object.keys(screenPoints).length === 3) {
+              if (handType === 'Left') currentHands.left = screenPoints;
+              else if (handType === 'Right') currentHands.right = screenPoints;
+              else {
+                // 如果没识别左右，根据x位置粗略判断
+                const avgX = (screenPoints[4]?.x || 0) + (screenPoints[8]?.x || 0) + (screenPoints[20]?.x || 0);
+                if (avgX < hudWidth/2) currentHands.left = screenPoints;
+                else currentHands.right = screenPoints;
+              }
+            }
+          }
+        }
+
+        // 丢失保护：如果当前帧没有手，保留上一帧结果 (最多0.5s)
+        if (!currentHands.left && !currentHands.right) {
+          frameLostCount++;
+          if (frameLostCount < MAX_LOST_FRAMES && lastResults) {
+            currentHands = lastResults;
+          } else {
+            currentHands = { left: null, right: null };
+          }
+        } else {
+          frameLostCount = 0;
+          lastResults = currentHands;
+        }
+
+        handsData = currentHands;
+        // 更新Three.js滤镜面
+        const intensity = parseFloat(intensitySlider.value);
+        const glow = parseFloat(glowSlider.value);
+        updateFilterMeshes(handsData, intensity, glow);
+
+        // HUD
+        drawHUD(handsData, glow);
+
+        // 渲染Three
+        renderer.render(scene, camera);
+
+      } catch (e) {
+        console.warn('Detection error:', e);
+      }
+      requestAnimationFrame(detectLoop);
+    }
+
+    // --- 初始化 ---
+    async function init() {
+      await initHandLandmarker();
+      await startCamera();
+      // 启动循环
+      detectLoop();
+    }
+
+    // UI 绑定
+    intensitySlider.addEventListener('input', () => {
+      intensityVal.textContent = intensitySlider.value;
+    });
+    glowSlider.addEventListener('input', () => {
+      glowVal.textContent = glowSlider.value;
+    });
+
+    init();
+
+    // 清理
+    window.addEventListener('beforeunload', () => {
+      if (handLandmarker) handLandmarker.close();
+    });
+  </script>
+</body>
+</html>
