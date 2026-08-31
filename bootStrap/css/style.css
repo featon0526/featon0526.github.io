@@ -1,0 +1,33 @@
+
+.bordered,navbar-top {border-bottom: 1px solid #dcdcdc;}
+.opacity,.navbar-top,#myCarousel02 .carousel-indicators,#myCarousel02 .carousel-text-inner{
+    background: #fff;
+    filter:alpha(opacity=80);
+    background: rgba(255,255,255,.8);
+}
+.h50{font-size: 50px;}
+.h28{font-size: 28px;}
+.h20{font-size: 20px;}
+.h16{font-size: 16px;}
+#myCarousel02  .carousel-indicators{
+    width: 100%;
+    left: 0;
+    top: 0;
+    margin-left: 0;
+}
+#myCarousel02 li.active {
+    border-bottom: 2px solid #000;
+}
+#myCarousel02 li {
+    text-indent: 0;
+    font-size: 18px;
+    margin: 1px;
+    border: none;
+    border-radius: 0;
+    background: none;
+}
+#myCarousel02 li:first-child{
+    margin-left: 0;
+}
+.bordered .text-center{margin-left: auto;margin-right: auto;}
+

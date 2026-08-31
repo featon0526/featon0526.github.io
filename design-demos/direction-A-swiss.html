@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>心流 Flow · 方向 A · Swiss Monochrome</title>
+<style>
+/* ===== iPhone frame 模板（verbatim，禁止改写几何） ===== */
+.phone{display:inline-block;padding:12px;background:#000;border-radius:60px;box-shadow:0 0 0 2px #1f2937,0 20px 60px rgba(0,0,0,.3);position:relative;}
+.phone .screen{position:relative;border-radius:48px;overflow:hidden;width:393px;height:852px;background:#fff;}
+.phone .statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-size:16px;font-weight:600;font-family:-apple-system,"SF Pro Text",sans-serif;z-index:20;pointer-events:none;color:#000;}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:124px;height:36px;background:#000;border-radius:999px;z-index:30;}
+.phone .content{position:absolute;top:54px;left:0;right:0;bottom:34px;overflow:auto;}
+.phone .homeindicator{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:140px;height:5px;background:rgba(0,0,0,.3);border-radius:999px;z-index:10;}
+/* 深色屏变体：给 .phone 加 .dark */
+.phone.dark .statusbar{color:#fff;}
+.phone.dark .homeindicator{background:rgba(255,255,255,.5);}
+
+/* ===== Swiss Monochrome 主题令牌 ===== */
+.phone .screen{--bg:#FFFFFF;--fg:#000000;--mut:#6E6E6E;--line:#E5E5E5;--acc:#E5484D;--fill:#000000;background:var(--bg);color:var(--fg);}
+.phone.dark .screen{--bg:#000000;--fg:#FFFFFF;--mut:#9A9A9A;--line:#262626;--acc:#FF6169;--fill:#FFFFFF;}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#EDEDED;}
+body{font-family:system-ui,-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:#000;-webkit-font-smoothing:antialiased;padding:40px 40px 64px;
+  background-image:linear-gradient(90deg,rgba(0,0,0,.045) 1px,transparent 1px);background-size:44px 100%;}
+
+/* 页面海报头 */
+.poster{max-width:1860px;margin:0 auto 34px;border-top:3px solid #000;padding-top:14px;}
+.poster .r1{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+.poster h1{font-size:52px;font-weight:700;letter-spacing:-.045em;line-height:.94;}
+.poster h1 em{font-style:italic;font-weight:400;}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;}
+.poster .meta{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#000;text-align:right;line-height:1.7;}
+.poster .rule{height:1px;background:#000;margin-top:14px;}
+.poster .sub{display:flex;gap:28px;flex-wrap:wrap;margin-top:10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#5A5A5A;}
+
+.deck{display:flex;gap:34px;align-items:flex-start;overflow-x:auto;padding-bottom:22px;max-width:1860px;margin:0 auto;}
+.slot{flex:0 0 auto;}
+.cap{font-style:italic;font-size:14px;color:#000;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid #000;display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+.cap b{font-style:normal;font-weight:600;}
+.cap span{font-style:normal;font-size:10px;letter-spacing:.16em;color:#6E6E6E;}
+
+/* ===== 屏内通用（Swiss：锐角、发丝线、紧排） ===== */
+.wrap{position:absolute;inset:0;display:flex;flex-direction:column;}
+.scr{flex:1;overflow:auto;}
+.scr::-webkit-scrollbar{width:0;}
+.pad{padding:0 22px;}
+.hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 22px 9px;}
+.hd .t{font-size:22px;font-weight:700;letter-spacing:-.03em;}
+.hd .t i{font-style:italic;font-weight:400;font-size:15px;color:var(--mut);margin-left:7px;letter-spacing:0;}
+.k{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);}
+.k.on{color:var(--fg);}
+.k.ac{color:var(--acc);}
+.hr{height:1px;background:var(--line);}
+.hr2{height:1px;background:var(--fg);}
+.hracc{height:2px;background:var(--acc);}
+.sec{padding:15px 22px 16px;}
+.rowb{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+.body{font-size:15px;line-height:1.5;letter-spacing:-.005em;}
+.small{font-size:14px;line-height:1.45;color:var(--mut);}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+.btn{border:1px solid var(--fg);background:transparent;color:var(--fg);border-radius:0;font-size:15px;font-weight:600;padding:13px 0;width:100%;letter-spacing:.02em;}
+.btn.solid{background:var(--fill);color:var(--bg);}
+.btn.sm{font-size:13px;padding:8px 12px;width:auto;font-weight:600;}
+.chips{display:flex;gap:0;border:1px solid var(--line);}
+.chip{flex:1;padding:9px 0;text-align:center;font-size:12px;letter-spacing:.1em;border-right:1px solid var(--line);color:var(--mut);font-family:ui-monospace,Menlo,Consolas,monospace;}
+.chip:last-child{border-right:0;}
+.chip.on{background:var(--fill);color:var(--bg);}
+.seg{display:inline-flex;border:1px solid var(--fg);}
+.seg button{padding:6px 14px;font-size:12px;letter-spacing:.12em;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--fg);}
+.seg button.on{background:var(--fill);color:var(--bg);}
+.big{font-size:56px;font-weight:700;letter-spacing:-.05em;line-height:.9;font-variant-numeric:tabular-nums;}
+.grid2{display:grid;grid-template-columns:1fr 1px 1fr;}
+.grid2 .vr{background:var(--line);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl td{border-top:1px solid var(--line);padding:9px 0;font-size:14px;}
+.tbl td:last-child{text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;}
+/* AI 注：瑞士排版里的「注」——朱红细线 + mono 标签 */
+.note{padding:13px 22px 16px;border-top:2px solid var(--acc);}
+.note .txt{font-size:15px;line-height:1.5;margin-top:6px;letter-spacing:-.005em;}
+.blink{display:inline-block;width:7px;height:7px;background:var(--acc);margin-right:6px;animation:bk 1.1s steps(1,end) infinite;vertical-align:middle;}
+@keyframes bk{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+/* toggle：直角开关 */
+.sw{width:46px;height:26px;border:1px solid var(--fg);background:transparent;position:relative;flex:0 0 auto;}
+.sw i{position:absolute;top:2px;left:2px;width:20px;height:20px;background:var(--fg);transition:left .14s linear;}
+.sw.on{background:var(--fill);}
+.sw.on i{left:22px;background:var(--bg);}
+.trow{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--line);}
+.trow .g{flex:1;min-width:0;}
+.cb{width:18px;height:18px;border:1px solid var(--fg);flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:transparent;margin-top:2px;}
+.cb.on{background:var(--fill);}
+.task{display:flex;gap:13px;padding:13px 0;border-top:1px solid var(--line);align-items:flex-start;}
+.task .ti{font-size:15px;font-weight:600;letter-spacing:-.01em;}
+.task.done .ti{text-decoration:line-through;}
+.task.done{opacity:.42;}
+.link{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;border-bottom:1px solid var(--fg);padding-bottom:1px;}
+.tabs{flex:0 0 auto;border-top:1px solid var(--fg);display:flex;background:var(--bg);}
+.tabs button{flex:1;padding:11px 0 12px;text-align:center;position:relative;}
+.tabs .n{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:var(--mut);display:block;}
+.tabs .l{font-size:13px;font-weight:600;color:var(--mut);display:block;margin-top:3px;letter-spacing:.02em;}
+.tabs button.on .l,.tabs button.on .n{color:var(--fg);}
+.tabs button.on::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--fg);}
+.inp{flex:1;border:0;border-bottom:1px solid var(--fg);background:transparent;color:var(--fg);font-size:15px;padding:8px 2px;outline:none;font-family:inherit;}
+.inp::placeholder{color:var(--mut);}
+.bars{display:flex;align-items:flex-end;gap:7px;height:104px;}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;cursor:pointer;}
+.bar u{display:block;background:var(--line);}
+.bar.on u{background:var(--fill);}
+.bar em{font-style:normal;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;text-align:center;color:var(--mut);margin-top:6px;display:block;}
+.bar.on em{color:var(--fg);}
+.hbar{height:10px;background:var(--line);position:relative;margin-top:7px;}
+.hbar i{position:absolute;inset:0 auto 0 0;background:var(--fill);}
+.segs{display:flex;gap:3px;margin-top:9px;}
+.segs u{flex:1;height:10px;background:var(--line);}
+.segs u.on{background:var(--fill);}
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--fg);}
+.stepper button{width:44px;height:44px;font-size:20px;font-weight:400;line-height:1;}
+.stepper .v{width:64px;text-align:center;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;border-left:1px solid var(--fg);border-right:1px solid var(--fg);height:44px;line-height:44px;}
+</style>
+</head>
+<body>
+
+<div class="poster">
+  <div class="r1">
+    <h1>心流 <em>Flow</em><br>AI 番茄钟</h1>
+    <div class="meta mono">方向 A / Direction A<br>Swiss Monochrome · 极致黑白<br>#000 · #FFF · #E5E5E5 · 一抹朱红 #E5484D</div>
+  </div>
+  <div class="rule"></div>
+  <div class="sub mono"><span>01 专注计时</span><span>02 统计</span><span>03 任务清单</span><span>04 设置</span><span>iPhone 15 Pro · 393×852</span><span>单文件 · 离线可点</span></div>
+</div>
+
+<div class="deck" id="deck"></div>
+
+<script>
+/* ================= 数据与状态（每台 iPhone 独立状态机） ================= */
+var MONO='ui-monospace,Menlo,Consolas,monospace';
+var SPARK=[38,42,40,47,53,50,58,63,61,68,72,70,76,79,74,81,85,83,88,84,90,87,92,89,94,91,88,93];
+var WEEK=[{d:'一',v:4},{d:'二',v:2},{d:'三',v:5},{d:'四',v:3},{d:'五',v:4},{d:'六',v:3},{d:'日',v:2}];
+var MONTHV=[{d:'W1',v:19},{d:'W2',v:24},{d:'W3',v:21},{d:'W4',v:23},{d:'W5',v:11}];
+
+function seedTasks(){return [
+  {t:'写物理作业',k:'deep',n:3,min:75,done:false},
+  {t:'复习「电磁感应」错题',k:'deep',n:2,min:50,done:false},
+  {t:'英语精读 Unit 7',k:'deep',n:2,min:50,done:true},
+  {t:'整理错题本目录',k:'light',n:1,min:25,done:false},
+  {t:'回小组消息 · 确认周末安排',k:'light',n:1,min:15,done:true},
+  {t:'打印月考卷',k:'light',n:1,min:10,done:false}
+];}
+
+function newState(screen){return {
+  screen:screen, running:false, total:30*60, remain:30*60, rounds:3, task:'写物理作业',
+  taskMeta:'深度工作 · 预计 3 番茄 · 已完成 2', period:'week', selDay:2,
+  tasks:seedTasks(), goal:8, aiSuggest:true, aiAuto:true, dnd:true, vibrate:false,
+  sound:'钟声', dark:false, exported:false, adopted:false
+};}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function mmss(s){var m=Math.floor(s/60),x=s%60;return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;}
+
+/* ================= 视图 ================= */
+var R=104, C=2*Math.PI*R;
+
+function ticksSVG(){var o='';for(var i=0;i<12;i++){var a=i*30*Math.PI/180;
+  var x1=120+Math.sin(a)*114,y1=120-Math.cos(a)*114,x2=120+Math.sin(a)*(i%3===0?122:118),y2=120-Math.cos(a)*(i%3===0?122:118);
+  o+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="var(--'+(i%3===0?'fg':'line')+')" stroke-width="'+(i%3===0?1.6:1)+'"/>';}
+  return o;}
+
+function sparkPts(n){var p=[],w=337,h=44;
+  for(var i=0;i<n;i++){var x=(i/(SPARK.length-1))*w+4, y=h-((SPARK[i]-30)/70)*h+2;p.push(x.toFixed(1)+','+y.toFixed(1));}
+  return p.join(' ');}
+
+function vTimer(s){
+  var el=s.total-s.remain, pr=el/s.total, off=C*(1-pr), deg=pr*360;
+  var vis=Math.max(2,Math.round(pr*SPARK.length))||2;
+  var idx=Math.round((s.remain%50)/50*20)+70;
+  return ''
+  +'<div class="hd"><div class="t">专注计时<i>Focus</i></div><div class="k">ROUND '+(s.rounds<10?'0':'')+s.rounds+' / 04</div></div>'
+  +'<div class="hr2"></div>'
+  +'<div class="sec" style="padding-bottom:6px"><div class="rowb"><div class="k '+(s.running?'ac':'')+'">'+(s.running?'<span class="blink"></span>运行中 · RUNNING':'已就绪 · IDLE')+'</div><div class="k" data-t="pct">'+Math.round(pr*100)+'% 完成</div></div></div>'
+  +'<div style="display:flex;justify-content:center;padding:2px 0 4px"><svg width="248" height="248" viewBox="0 0 240 240" aria-label="计时圆环">'
+    +ticksSVG()
+    +'<circle cx="120" cy="120" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="1"/>'
+    +'<circle data-t="ring" cx="120" cy="120" r="'+R+'" fill="none" stroke="var(--fg)" stroke-width="9" stroke-linecap="butt" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 120 120)"/>'
+    +'<g data-t="head" transform="rotate('+deg.toFixed(1)+' 120 120)"><rect x="115" y="11" width="10" height="10" fill="var(--fg)"/></g>'
+    +'<text data-t="time" x="120" y="128" text-anchor="middle" font-family="'+MONO+'" font-size="52" font-weight="600" letter-spacing="-2" fill="var(--fg)">'+mmss(s.remain)+'</text>'
+    +'<text x="120" y="150" text-anchor="middle" font-family="'+MONO+'" font-size="10" letter-spacing="2.4" fill="var(--mut)">REMAINING 剩余</text>'
+  +'</svg></div>'
+  +'<div class="sec" style="padding-top:4px"><div class="chips">'
+    +[25,30,45].map(function(m){return '<button class="chip'+(s.total===m*60?' on':'')+'" data-act="dur" data-val="'+m+'">'+m+' MIN</button>';}).join('')
+  +'</div></div>'
+  +'<div class="hr"></div>'
+  +'<div class="sec"><div class="k">当前任务 · CURRENT TASK</div>'
+    +'<div class="body" style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin:7px 0 5px">'+esc(s.task)+'</div>'
+    +'<div class="k" style="letter-spacing:.06em;text-transform:none">'+esc(s.taskMeta)+'</div></div>'
+  +'<div class="note"><div class="k ac">AI 建议 · SUGGESTION</div>'
+    +'<div class="txt">今天状态不错，建议 <b>30 分钟</b>深度专注，之后休息 6 分钟。</div>'
+    +'<div class="small mono" style="font-size:12px;margin-top:7px;letter-spacing:.02em">依据 · 近 7 日 14:00–16:00 完成率 82% · 中断 0.4 次/轮</div>'
+    +'<div style="margin-top:11px"><button class="btn sm'+(s.adopted?' solid':'')+'" data-act="adopt">'+(s.adopted?'已采纳 30 分钟':'采纳 30 分钟')+'</button></div></div>'
+  +'<div class="sec"><div class="rowb"><div class="k">专注指数 · 本轮</div><div class="k on mono" data-t="idx">'+idx+' / 100</div></div>'
+    +'<svg width="345" height="50" viewBox="0 0 345 50" style="margin-top:8px" aria-label="专注曲线">'
+      +'<line x1="0" y1="49" x2="345" y2="49" stroke="var(--line)"/>'
+      +'<line x1="0" y1="25" x2="345" y2="25" stroke="var(--line)" stroke-dasharray="2 4"/>'
+      +'<polyline points="'+sparkPts(SPARK.length)+'" fill="none" stroke="var(--line)" stroke-width="1.5"/>'
+      +'<polyline data-t="spk" points="'+sparkPts(vis)+'" fill="none" stroke="var(--fg)" stroke-width="2"/>'
+    +'</svg>'
+    +'<div class="rowb"><div class="k" style="font-size:10px">14:02 开始</div><div class="k" style="font-size:10px">峰值 94</div></div></div>'
+  +'<div class="hr"></div>'
+  +'<div class="sec" style="padding-bottom:22px">'
+    +'<button class="btn'+(s.running?'':' solid')+'" data-act="run">'+(s.running?'暂停':(s.remain<s.total?'继续':'开始专注'))+'</button>'
+    +'<div style="display:flex;gap:9px;margin-top:9px"><button class="btn" data-act="stop">结束本轮</button><button class="btn" data-act="skip">跳到休息</button></div>'
+  +'</div>';
+}
+
+function vStats(s){
+  var wk=s.period==='week', data=wk?WEEK:MONTHV, mx=wk?6:26;
+  var sel=Math.min(s.selDay,data.length-1), cur=data[sel];
+  var n1=wk?'23':'98', n2=wk?'9.5h':'41.2h';
+  return ''
+  +'<div class="hd"><div class="t">统计<i>Statistics</i></div>'
+    +'<div class="seg"><button class="'+(wk?'on':'')+'" data-act="period" data-val="week">周</button><button class="'+(wk?'':'on')+'" data-act="period" data-val="month">月</button></div></div>'
+  +'<div class="hr2"></div>'
+  +'<div class="grid2" style="border-bottom:1px solid var(--line)">'
+    +'<div style="padding:16px 0 15px 22px"><div class="k">'+(wk?'本周':'本月')+'完成 · POMODORO</div><div class="big" style="margin-top:9px">'+n1+'</div><div class="k" style="margin-top:8px;text-transform:none;letter-spacing:.05em">个番茄 · 环比 +12%</div></div>'
+    +'<div class="vr"></div>'
+    +'<div style="padding:16px 22px 15px 18px"><div class="k">专注时长 · HOURS</div><div class="big" style="margin-top:9px">'+n2+'</div><div class="k" style="margin-top:8px;text-transform:none;letter-spacing:.05em">日均 '+(wk?'1.4h':'1.3h')+' · 目标 2h</div></div>'
+  +'</div>'
+  +'<div class="sec"><div class="rowb"><div class="k">'+(wk?'7 日趋势':'5 周趋势')+' · TREND</div><div class="k on mono">'+cur.d+' · '+cur.v+' 个</div></div>'
+    +'<div class="bars" style="margin-top:12px">'
+    +data.map(function(b,i){var h=Math.max(6,Math.round(b.v/mx*88));
+      return '<div class="bar'+(i===sel?' on':'')+'" data-act="day" data-val="'+i+'"><u style="height:'+h+'px"></u><em>'+b.d+'</em></div>';}).join('')
+    +'</div>'
+    +'<div class="k" style="margin-top:10px;text-transform:none;letter-spacing:.05em">点击柱状可查看单'+(wk?'日':'周')+'明细</div></div>'
+  +'<div class="hr"></div>'
+  +'<div class="sec"><div class="k">时段分布 · BY TIME OF DAY</div>'
+    +[['晨 06–12','42%',42],['午 12–18','35%',35],['晚 18–24','23%',23]].map(function(r){
+      return '<div style="margin-top:13px"><div class="rowb"><div class="body" style="font-size:14px">'+r[0]+'</div><div class="k on mono">'+r[1]+'</div></div>'
+        +'<div class="hbar"><i style="width:'+r[2]+'%"></i></div></div>';}).join('')
+  +'</div>'
+  +'<div class="sec" style="padding-top:2px"><table class="tbl">'
+    +'<tr><td>完成率</td><td>86%</td></tr>'
+    +'<tr><td>平均单轮时长</td><td>26 min</td></tr>'
+    +'<tr><td>最长连续天数</td><td>5 天</td></tr>'
+    +'<tr><td>被中断次数</td><td>7 次</td></tr>'
+  +'</table></div>'
+  +'<div class="note" style="margin-bottom:22px"><div class="k ac">AI 洞察 · INSIGHT</div>'
+    +'<div class="txt">「你周二下午最易分心，建议把深度任务放上午。」</div>'
+    +'<div class="small mono" style="font-size:12px;margin-top:7px;letter-spacing:.02em">样本 · 近 4 周 42 轮 · 置信度 0.78</div></div>';
+}
+
+function vTasks(s){
+  var deep=[],light=[];
+  s.tasks.forEach(function(t,i){(t.k==='deep'?deep:light).push([t,i]);});
+  var done=s.tasks.filter(function(t){return t.done;}).length;
+  var used=4;
+  function grp(title,en,arr){
+    return '<div class="sec" style="padding-bottom:4px"><div class="rowb"><div class="k on">'+title+' · '+en+'</div>'
+      +'<div class="k mono">'+arr.filter(function(x){return x[0].done;}).length+' / '+arr.length+'</div></div></div>'
+      +'<div class="pad">'+arr.map(function(x){var t=x[0],i=x[1];
+        return '<div class="task'+(t.done?' done':'')+'">'
+          +'<button class="cb'+(t.done?' on':'')+'" data-act="check" data-val="'+i+'" aria-label="完成">'
+            +(t.done?'<svg width="11" height="11" viewBox="0 0 12 12"><path d="M1 6.4 4.2 9.6 11 2.8" fill="none" stroke="var(--bg)" stroke-width="2"/></svg>':'')+'</button>'
+          +'<div class="g"><div class="ti">'+esc(t.t)+'</div>'
+            +'<div class="k" style="margin-top:5px;text-transform:none;letter-spacing:.05em">'+(t.k==='deep'?'深度':'浅层')+' · 预计 '+t.n+' 番茄 · '+t.min+' min</div></div>'
+          +'<button class="link" data-act="focus" data-val="'+i+'">专注 →</button></div>';}).join('')+'</div>';
+  }
+  return ''
+  +'<div class="hd"><div class="t">任务清单<i>Tasks</i></div><div class="k mono">'+done+' / '+s.tasks.length+' 完成</div></div>'
+  +'<div class="hr2"></div>'
+  +'<div class="sec"><div class="rowb"><div class="k">今日番茄 · DAILY GOAL</div><div class="k on mono">'+used+' / '+s.goal+'</div></div>'
+    +'<div class="segs">'+Array.apply(null,Array(s.goal)).map(function(_,i){return '<u class="'+(i<used?'on':'')+'"></u>';}).join('')+'</div>'
+    +'<div class="k" style="margin-top:9px;text-transform:none;letter-spacing:.05em">剩余 '+(s.goal-used)+' 个 · 约 '+((s.goal-used)*25)+' 分钟</div></div>'
+  +'<div class="hr"></div>'
+  +'<div class="sec" style="padding-bottom:10px"><div class="k">新建任务 · ADD</div>'
+    +'<div style="display:flex;gap:10px;align-items:flex-end;margin-top:6px">'
+      +'<input class="inp" data-t="newtask" placeholder="输入任务，AI 会自动分类" aria-label="新任务">'
+      +'<button class="btn sm solid" data-act="add">加入</button></div>'
+    +'<div class="k" style="margin-top:9px;text-transform:none;letter-spacing:.05em">含「写 / 复习 / 练 / 读」判为深度工作</div></div>'
+  +'<div class="hr"></div>'
+  +grp('深度工作','DEEP WORK',deep)
+  +'<div class="hr" style="margin-top:14px"></div>'
+  +grp('浅层事务','SHALLOW',light)
+  +'<div class="note" style="margin:16px 0 22px"><div class="k ac">AI 分类 · CLASSIFIER</div>'
+    +'<div class="txt">深度任务已排在上午 09:00–11:30；浅层事务并入 16:00 后的碎片时段。</div></div>';
+}
+
+function vSet(s){
+  function tg(k,label,en,desc){
+    return '<div class="trow"><div class="g"><div class="body" style="font-weight:600">'+label+'</div>'
+      +'<div class="k" style="margin-top:4px;text-transform:none;letter-spacing:.05em">'+desc+'</div></div>'
+      +'<button class="sw'+(s[k]?' on':'')+'" data-act="tg" data-val="'+k+'" aria-label="'+en+'"><i></i></button></div>';
+  }
+  return ''
+  +'<div class="hd"><div class="t">设置<i>Settings</i></div><div class="k mono">V 1.4.0</div></div>'
+  +'<div class="hr2"></div>'
+  +'<div class="sec"><div class="k">每日番茄目标 · DAILY TARGET</div>'
+    +'<div class="rowb" style="margin-top:11px;align-items:center">'
+      +'<div class="stepper"><button data-act="goal" data-val="-1">−</button><div class="v">'+s.goal+'</div><button data-act="goal" data-val="1">+</button></div>'
+      +'<div style="text-align:right"><div class="k on mono" style="font-size:13px">'+(s.goal*25)+' MIN</div>'
+      +'<div class="k" style="margin-top:4px;text-transform:none;letter-spacing:.05em">约 '+(s.goal*25/60).toFixed(1)+' 小时 / 天</div></div></div></div>'
+  +'<div class="note" style="padding-bottom:4px"><div class="k ac">AI 强度 · INTELLIGENCE</div>'
+    +'<div class="small" style="margin-top:5px;font-size:14px">AI 读取你的历史专注数据，决定每轮时长与休息节奏。</div>'
+    +'<div style="margin-top:6px">'
+    +tg('aiSuggest','智能建议','ai suggest','在计时页显示「本轮该专注多久」的建议条')
+    +tg('aiAuto','自动调度','auto schedule','允许 AI 直接改写下一轮时长（当前 30 min）')
+    +'</div></div>'
+  +'<div class="sec" style="padding-bottom:4px"><div class="k">声音与提醒 · SOUND</div>'
+    +'<div class="trow"><div class="g"><div class="body" style="font-weight:600">提示音</div>'
+      +'<div class="k" style="margin-top:4px;text-transform:none;letter-spacing:.05em">结束时播放</div></div>'
+      +'<button class="btn sm" data-act="sound">'+s.sound+'</button></div>'
+    +tg('vibrate','震动','vibrate','静音模式下仍震动提醒')
+    +tg('dnd','专注免打扰','do not disturb','计时中拦截通知横幅')
+  +'</div>'
+  +'<div class="sec" style="padding-bottom:4px"><div class="k">主题 · APPEARANCE</div>'
+    +'<div class="rowb" style="margin-top:11px;align-items:center">'
+      +'<div class="small" style="font-size:14px">'+(s.dark?'夜间反白 · 黑底白字':'日间 · 白底黑字')+'</div>'
+      +'<div class="seg"><button class="'+(s.dark?'':'on')+'" data-act="theme" data-val="light">浅</button><button class="'+(s.dark?'on':'')+'" data-act="theme" data-val="dark">深</button></div></div></div>'
+  +'<div class="sec"><div class="k">数据 · EXPORT</div>'
+    +'<table class="tbl" style="margin-top:8px"><tr><td>累计番茄</td><td>412 个</td></tr>'
+    +'<tr><td>数据起始</td><td>2025-11-03</td></tr></table>'
+    +'<div style="display:flex;gap:9px;margin-top:12px"><button class="btn" data-act="export" data-val="CSV">导出 CSV</button><button class="btn" data-act="export" data-val="JSON">导出 JSON</button></div>'
+    +'<div class="k'+(s.exported?' on':'')+'" style="margin-top:10px;text-transform:none;letter-spacing:.05em">'+(s.exported?'已导出 '+s.exported+' · 2026-08-29 14:02':'导出后可导入 Notion / Excel')+'</div></div>'
+  +'<div class="sec" style="padding-top:0;padding-bottom:22px"><div class="hr"></div>'
+    +'<div class="k" style="margin-top:12px">心流 FLOW · SWISS MONOCHROME · 方向 A</div></div>';
+}
+
+var VIEWS={timer:vTimer,stats:vStats,tasks:vTasks,settings:vSet};
+var TABS=[['timer','计时','01'],['stats','统计','02'],['tasks','任务','03'],['settings','设置','04']];
+
+function render(p){
+  var s=p.st;
+  var html='<div class="wrap"><div class="scr">'+VIEWS[s.screen](s)+'</div><div class="tabs">'
+    +TABS.map(function(t){return '<button class="'+(s.screen===t[0]?'on':'')+'" data-act="nav" data-val="'+t[0]+'"><span class="n">'+t[2]+'</span><span class="l">'+t[1]+'</span></button>';}).join('')
+    +'</div></div>';
+  p.el.querySelector('.content').innerHTML=html;
+}
+
+/* ================= 计时器：直接改 DOM，不整屏重渲染 ================= */
+function paint(p){
+  var s=p.st; if(s.screen!=='timer')return;
+  var q=function(t){return p.el.querySelector('[data-t="'+t+'"]');};
+  var el=s.total-s.remain, pr=el/s.total;
+  var t=q('time'); if(t)t.textContent=mmss(s.remain);
+  var r=q('ring'); if(r)r.setAttribute('stroke-dashoffset',(C*(1-pr)).toFixed(1));
+  var h=q('head'); if(h)h.setAttribute('transform','rotate('+(pr*360).toFixed(1)+' 120 120)');
+  var pc=q('pct'); if(pc)pc.textContent=Math.round(pr*100)+'% 完成';
+  var sp=q('spk'); if(sp)sp.setAttribute('points',sparkPts(Math.max(2,Math.round(pr*SPARK.length))));
+  var ix=q('idx'); if(ix)ix.textContent=(70+Math.round(pr*24))+' / 100';
+}
+function tick(p){
+  var s=p.st; if(!s.running)return;
+  s.remain--;
+  if(s.remain<=0){s.remain=0;s.running=false;s.rounds=Math.min(4,s.rounds+1);render(p);return;}
+  paint(p);
+}
+
+/* ================= 交互 ================= */
+function classify(txt){return /[写读练复习背算做题解]/.test(txt)||/复习|精读|练习|作业|论文/.test(txt)?'deep':'light';}
+
+function act(p,a,v){
+  var s=p.st,i;
+  if(a==='nav'){s.screen=v;render(p);return;}
+  if(a==='run'){s.running=!s.running;render(p);return;}
+  if(a==='stop'){s.running=false;s.remain=s.total;render(p);return;}
+  if(a==='skip'){s.running=false;s.total=6*60;s.remain=6*60;render(p);return;}
+  if(a==='dur'){s.total=parseInt(v,10)*60;s.remain=s.total;s.running=false;render(p);return;}
+  if(a==='adopt'){s.adopted=true;s.total=30*60;s.remain=30*60;s.running=false;render(p);return;}
+  if(a==='period'){s.period=v;s.selDay=v==='week'?2:1;render(p);return;}
+  if(a==='day'){s.selDay=parseInt(v,10);render(p);return;}
+  if(a==='check'){i=parseInt(v,10);s.tasks[i].done=!s.tasks[i].done;render(p);return;}
+  if(a==='focus'){i=parseInt(v,10);var t=s.tasks[i];
+    s.task=t.t;s.taskMeta=(t.k==='deep'?'深度工作':'浅层事务')+' · 预计 '+t.n+' 番茄 · '+t.min+' min';
+    s.total=Math.min(45,Math.max(15,t.min>50?30:t.min))*60;s.remain=s.total;s.running=false;s.screen='timer';render(p);return;}
+  if(a==='add'){var inp=p.el.querySelector('[data-t="newtask"]');if(!inp)return;
+    var val=inp.value.trim();if(!val)return;
+    var k=classify(val);s.tasks.push({t:val,k:k,n:k==='deep'?2:1,min:k==='deep'?50:15,done:false});render(p);return;}
+  if(a==='goal'){s.goal=Math.max(2,Math.min(14,s.goal+parseInt(v,10)));render(p);return;}
+  if(a==='tg'){s[v]=!s[v];render(p);return;}
+  if(a==='sound'){var L=['钟声','静音','白噪音','鸟鸣'];s.sound=L[(L.indexOf(s.sound)+1)%L.length];render(p);return;}
+  if(a==='theme'){s.dark=(v==='dark');p.el.classList.toggle('dark',s.dark);render(p);return;}
+  if(a==='export'){s.exported=v;render(p);return;}
+}
+
+/* ================= 装配 4 台 iPhone ================= */
+var CAPS=[['专注计时','FOCUS','01'],['统计','STATISTICS','02'],['任务清单','TASKS','03'],['设置','SETTINGS','04']];
+var deck=document.getElementById('deck'), phones=[];
+
+CAPS.forEach(function(c,i){
+  var slot=document.createElement('div');slot.className='slot';
+  slot.innerHTML='<div class="cap"><span style="font-style:italic;font-size:14px;color:#000">「<b>'+c[0]+'</b>」屏 · 可点</span><span class="mono">'+c[2]+' '+c[1]+'</span></div>'
+    +'<div class="phone"><div class="screen">'
+    +'<div class="island"></div>'
+    +'<div class="statusbar"><span>9:41</span><span>●●●&nbsp;&nbsp;WiFi&nbsp;&nbsp;100%</span></div>'
+    +'<div class="content"></div><div class="homeindicator"></div></div></div>';
+  deck.appendChild(slot);
+  var p={el:slot.querySelector('.phone'),st:newState(TABS[i][0])};
+  phones.push(p);
+  p.el.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]'); if(!b||!p.el.contains(b))return;
+    act(p,b.getAttribute('data-act'),b.getAttribute('data-val'));
+  });
+  p.el.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&e.target.getAttribute('data-t')==='newtask'){e.preventDefault();act(p,'add');}
+  });
+  render(p);
+  setInterval(function(){tick(p);},1000);
+});
+</script>
+</body>
+</html>

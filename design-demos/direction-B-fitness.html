@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>心流 Flow · 方向 B（Apple Fitness 风格）</title>
+<style>
+/* ===== iPhone 设备框 CSS 模板（verbatim，禁止改写几何） ===== */
+.phone{display:inline-block;padding:12px;background:#000;border-radius:60px;box-shadow:0 0 0 2px #1f2937,0 20px 60px rgba(0,0,0,.3);position:relative;}
+.phone .screen{position:relative;border-radius:48px;overflow:hidden;width:393px;height:852px;background:#fff;}
+.phone .statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-size:16px;font-weight:600;font-family:-apple-system,"SF Pro Text",sans-serif;z-index:20;pointer-events:none;color:#000;}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:124px;height:36px;background:#000;border-radius:999px;z-index:30;}
+.phone .content{position:absolute;top:54px;left:0;right:0;bottom:34px;overflow:auto;}
+.phone .homeindicator{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:140px;height:5px;background:rgba(0,0,0,.3);border-radius:999px;z-index:10;}
+.phone.dark .statusbar{color:#fff;}
+.phone.dark .homeindicator{background:rgba(255,255,255,.5);}
+
+/* ===== 方向 B 自有样式（Apple Fitness / Health 视觉 DNA） ===== */
+:root{
+  --move:#FA114F; --exercise:#A4F500; --stand:#1EEAEF;
+  --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#6e6e73;
+  --hair:rgba(60,60,67,.12); --track:#e5e5ea;
+}
+.phone.dark{--bg:#000;--card:#1c1c1e;--ink:#fff;--sub:#98989f;--hair:rgba(255,255,255,.14);--track:#2c2c2e;}
+.phone.dark .screen{background:#000;}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,"SF Pro Display","SF Pro Text",system-ui,sans-serif;background:#eef0f4;color:#1c1c1e;}
+.head{max-width:1740px;margin:0 auto;padding:22px 28px 2px;}
+.head h1{font-size:20px;margin:0;font-weight:700;}
+.head p{margin:4px 0 0;color:#6e6e73;font-size:13px;}
+.stage{display:flex;gap:22px;padding:20px 28px 44px;overflow-x:auto;align-items:flex-start;}
+.device{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;}
+.label{font-style:italic;font-size:13px;color:#6e6e73;margin-bottom:10px;}
+
+/* 内容区：固定底部 tab bar + 可滚动区域 */
+.phone .content{display:flex;flex-direction:column;}
+.screen-inner{display:flex;flex-direction:column;height:100%;}
+.scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;}
+.pad{padding:16px 18px 26px;font-size:15px;}
+
+/* 顶部 */
+.toprow{display:flex;justify-content:space-between;align-items:flex-start;}
+.eyebrow{font-size:12px;color:var(--sub);font-weight:600;letter-spacing:.02em;}
+.h1{font-size:22px;font-weight:700;color:var(--ink);margin-top:2px;}
+.badge-live{font-size:12px;color:#c20e43;font-weight:600;background:rgba(250,17,79,.1);padding:4px 10px;border-radius:999px;}
+
+/* 同心圆环 hero（签名细节 120%） */
+.ringwrap{display:flex;justify-content:center;margin:8px 0 4px;}
+.rings{width:228px;height:228px;display:block;}
+.ring-time{font-size:34px;font-weight:700;fill:var(--ink);font-family:inherit;}
+.ring-sub{font-size:12px;font-weight:600;fill:var(--sub);font-family:inherit;}
+
+/* 卡片通用 */
+.card{background:var(--card);border-radius:18px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mc-title{font-size:13px;color:var(--sub);font-weight:600;}
+
+/* 当前任务 */
+.tasknow{background:var(--card);border-radius:16px;padding:12px 14px;margin-top:6px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.tn-label{font-size:12px;color:var(--sub);}
+.tn-name{font-size:17px;font-weight:600;color:var(--ink);margin-top:2px;display:flex;align-items:center;gap:8px;}
+.chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+.chip-deep{background:rgba(250,17,79,.12);color:#c20e43;}
+.chip-shallow{background:rgba(30,234,239,.18);color:#0a8b90;}
+
+/* AI 建议 / 洞察条（无左彩 border，用彩色图标 chip） */
+.ai-bar{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:16px;padding:12px 14px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.ai-ic{width:30px;height:30px;border-radius:9px;background:rgba(250,17,79,.12);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--move);}
+.ai-ic svg{width:18px;height:18px;}
+.ai-title{font-size:12px;font-weight:700;color:#c20e43;margin-bottom:2px;}
+.ai-text{font-size:14px;line-height:1.35;color:var(--ink);}
+
+/* mini 曲线 */
+.mini-card{background:var(--card);border-radius:16px;padding:12px 14px;margin-top:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.spark{width:100%;height:46px;display:block;}
+
+/* 控制按钮 */
+.controls{display:flex;gap:10px;margin-top:14px;}
+.btn{flex:1;height:50px;border-radius:14px;font-size:16px;font-weight:600;border:none;cursor:pointer;font-family:inherit;}
+.btn-primary{background:var(--move);color:#fff;}
+.btn-ghost{background:rgba(0,0,0,.06);color:var(--ink);flex:0 0 90px;}
+.phone.dark .btn-ghost{background:rgba(255,255,255,.12);}
+
+/* 统计大数字 */
+.bignums{display:flex;gap:12px;margin-top:6px;}
+.bignum{flex:1;background:var(--card);border-radius:18px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+.bn-num{font-size:34px;font-weight:700;color:var(--ink);}
+.bn-unit{font-size:16px;font-weight:600;color:var(--sub);margin-left:2px;}
+.bn-label{font-size:13px;color:var(--sub);margin-top:2px;}
+
+/* 分段控件 */
+.seg{display:inline-flex;background:rgba(0,0,0,.06);border-radius:10px;padding:2px;}
+.phone.dark .seg{background:rgba(255,255,255,.1);}
+.seg-btn{border:none;background:none;font-size:13px;font-weight:600;color:var(--sub);padding:4px 12px;border-radius:8px;cursor:pointer;font-family:inherit;}
+.seg-btn.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1);}
+
+/* 时段柱状 */
+.bars{display:flex;gap:14px;align-items:flex-end;height:120px;margin-top:8px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.bar-track{width:100%;max-width:48px;height:84px;background:var(--track);border-radius:10px;display:flex;align-items:flex-end;overflow:hidden;}
+.bar-fill{width:100%;border-radius:10px;transition:height .4s;}
+.bar-val{font-size:12px;font-weight:600;color:var(--ink);}
+.bar-label{font-size:12px;color:var(--sub);}
+
+/* 任务清单 */
+.addrow{display:flex;gap:8px;margin-top:10px;}
+.addin{flex:1;height:44px;border-radius:12px;border:1px solid var(--hair);background:var(--card);padding:0 12px;font-size:15px;color:var(--ink);font-family:inherit;}
+.addin::placeholder{color:var(--sub);}
+.btn-add{width:44px;height:44px;border-radius:12px;border:none;background:var(--move);color:#fff;font-size:24px;cursor:pointer;flex:0 0 44px;line-height:1;}
+.group{margin-top:16px;}
+.group-head{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.group-sub{font-size:12px;color:var(--sub);font-weight:500;}
+.dot{width:9px;height:9px;border-radius:50%;}
+.dot.deep{background:var(--move);} .dot.shallow{background:var(--stand);}
+.task{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:pointer;}
+.task.done{opacity:.5;}
+.check{width:24px;height:24px;border-radius:8px;border:2px solid var(--sub);flex:0 0 24px;display:flex;align-items:center;justify-content:center;}
+.check.on{background:var(--move);border-color:var(--move);}
+.check.on svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;}
+.task-main{flex:1;min-width:0;}
+.task-name{font-size:15px;font-weight:600;color:var(--ink);}
+.task.done .task-name{text-decoration:line-through;}
+.task-meta{font-size:12px;color:var(--sub);margin-top:3px;display:flex;align-items:center;gap:6px;}
+
+/* 设置 */
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.row-t{font-size:15px;font-weight:600;color:var(--ink);}
+.row-s{font-size:12px;color:var(--sub);margin-top:2px;}
+.divider{height:.5px;background:var(--hair);margin:12px 0;}
+.muted{color:var(--sub);font-size:13px;}
+.clickable{cursor:pointer;}
+.stepper{display:inline-flex;align-items:center;background:rgba(0,0,0,.06);border-radius:10px;overflow:hidden;}
+.phone.dark .stepper{background:rgba(255,255,255,.1);}
+.stepper button{width:34px;height:32px;border:none;background:none;font-size:18px;color:var(--ink);cursor:pointer;font-family:inherit;}
+.step-val{min-width:30px;text-align:center;font-size:15px;font-weight:600;color:var(--ink);}
+.switch{width:50px;height:30px;border-radius:999px;background:var(--track);border:none;position:relative;cursor:pointer;transition:background .2s;flex:0 0 50px;}
+.switch.on{background:var(--move);}
+.knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
+.switch.on .knob{transform:translateX(20px);}
+
+/* 底部 tab bar */
+.tabbar{display:flex;border-top:.5px solid var(--hair);background:var(--card);padding:7px 0 4px;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--sub);font-size:11px;font-family:inherit;cursor:pointer;padding:3px 0;}
+.tab .tab-ic svg{width:25px;height:25px;display:block;}
+.tab.active{color:var(--move);}
+
+/* toast */
+.toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(0,0,0,.8);color:#fff;font-size:13px;padding:8px 14px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:40;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.phone.dark .toast{background:rgba(255,255,255,.92);color:#000;}
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>心流 Flow · 方向 B — 现实参照（Apple Fitness 活动圆环 + Health 摘要）</h1>
+  <p>平铺 4 台 iPhone，每台底部 tab bar 可在「专注 / 统计 / 任务 / 设置」间切换，屏内元素均可点击并真实改变状态。</p>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="label">专注计时（活动圆环 hero）</div>
+    <div class="phone" id="p1">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="sb-right"><svg width="26" height="14" viewBox="0 0 26 14"><rect x="1" y="2" width="20" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="4" width="14" height="6" rx="1.5" fill="currentColor"/><rect x="22.5" y="5" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+        <div class="island"></div>
+        <div class="content" id="c-p1"></div>
+        <div class="homeindicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="device">
+    <div class="label">统计（数据看板）</div>
+    <div class="phone" id="p2">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="sb-right"><svg width="26" height="14" viewBox="0 0 26 14"><rect x="1" y="2" width="20" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="4" width="14" height="6" rx="1.5" fill="currentColor"/><rect x="22.5" y="5" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+        <div class="island"></div>
+        <div class="content" id="c-p2"></div>
+        <div class="homeindicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="device">
+    <div class="label">任务清单（AI 深度 / 浅层分组）</div>
+    <div class="phone" id="p3">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="sb-right"><svg width="26" height="14" viewBox="0 0 26 14"><rect x="1" y="2" width="20" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="4" width="14" height="6" rx="1.5" fill="currentColor"/><rect x="22.5" y="5" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+        <div class="island"></div>
+        <div class="content" id="c-p3"></div>
+        <div class="homeindicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="device">
+    <div class="label">设置（目标 / AI 强度 / 主题）</div>
+    <div class="phone" id="p4">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="sb-right"><svg width="26" height="14" viewBox="0 0 26 14"><rect x="1" y="2" width="20" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="4" width="14" height="6" rx="1.5" fill="currentColor"/><rect x="22.5" y="5" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+        <div class="island"></div>
+        <div class="content" id="c-p4"></div>
+        <div class="homeindicator"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const COLORS={move:'#FA114F',exercise:'#A4F500',stand:'#1EEAEF'};
+const RINGS=[{r:92,color:COLORS.move},{r:70,color:COLORS.exercise},{r:48,color:COLORS.stand}];
+const RINGW=18;
+const ringCirc=r=>2*Math.PI*r;
+const fmt=s=>{s=Math.max(0,s);const m=Math.floor(s/60),x=s%60;return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;};
+
+/* 图标（inline SVG，非 emoji） */
+const IC={
+ timer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V9"/><path d="M9 2h6"/><path d="M18 6l1.6-1.6"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M20 20H3"/></svg>',
+ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="18" r="1.4"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2 2M17 17l2.1 2.1M19 4.9l-2 2.1M7 17l-2 2.1"/></svg>',
+ spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>',
+ check:'<svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg>'
+};
+
+function defaultState(){
+ return {
+  screen:'focus',
+  focus:{running:false,total:30*60,remaining:18*60,interval:null,curve:[22,26,30,38,36,44,50,48,54,58,55,62,60,64]},
+  weekly:{view:'week'},
+  tasks:[
+   {name:'写物理作业',type:'deep',est:3,done:false},
+   {name:'复习英语单词',type:'deep',est:2,done:false},
+   {name:'回复班级群消息',type:'shallow',est:1,done:true},
+   {name:'整理课堂笔记',type:'shallow',est:1,done:false}
+  ],
+  settings:{goal:8,suggest:true,auto:false,theme:'light',sound:'轻提示音',remind:true},
+  stats:{week:[3,5,4,6,2,1,2],month:[2,3,1,4,5,3,2,4,6,3,2,1,5,4,3,2,6,5,4,3,2,4,3,5,6,4,3,2,1,4],dist:{morning:40,noon:35,evening:25}}
+ };
+}
+const phones={p1:defaultState(),p2:defaultState(),p3:defaultState(),p4:defaultState()};
+phones.p1.screen='focus'; phones.p2.screen='stats'; phones.p3.screen='tasks'; phones.p4.screen='settings';
+
+/* ===== 通用组件 ===== */
+function sparkline(data,color){
+ const w=280,h=50,max=Math.max(...data),min=Math.min(...data),rng=(max-min)||1;
+ const pts=data.map((v,i)=>{const x=(i/(data.length-1))*w;const y=h-((v-min)/rng)*(h-10)-5;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
+ return '<svg viewBox="0 0 '+w+' '+h+'" class="spark" preserveAspectRatio="none"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+function ringSVG(pid,fp,rp,tp,rem){
+ let s='<svg viewBox="0 0 220 220" class="rings">';
+ const ps=[fp,rp,tp];
+ RINGS.forEach((rg,i)=>{const C=ringCirc(rg.r),off=C*(1-ps[i]);
+   s+='<circle cx="110" cy="110" r="'+rg.r+'" fill="none" stroke="var(--track)" stroke-width="'+RINGW+'"/>';
+   s+='<circle id="'+pid+'-ring-'+i+'" cx="110" cy="110" r="'+rg.r+'" fill="none" stroke="'+rg.color+'" stroke-width="'+RINGW+'" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 110 110)"/>';
+ });
+ s+='<text id="'+pid+'-time" x="110" y="106" text-anchor="middle" class="ring-time">'+fmt(rem)+'</text>';
+ s+='<text x="110" y="130" text-anchor="middle" class="ring-sub">专注剩余</text></svg>';
+ return s;
+}
+function tabbar(pid,st,active){
+ const tabs=[['focus','专注',IC.timer],['stats','统计',IC.chart],['tasks','任务',IC.list],['settings','设置',IC.gear]];
+ return '<div class="tabbar">'+tabs.map(([k,lb,icon])=>
+   '<button class="tab '+(active===k?'active':'')+'" data-action="tab" data-screen="'+k+'" data-phone="'+pid+'"><span class="tab-ic">'+icon+'</span><span class="tab-lb">'+lb+'</span></button>'
+ ).join('')+'</div>';
+}
+function aiBar(title,text){
+ return '<div class="ai-bar"><div class="ai-ic">'+IC.spark+'</div><div><div class="ai-title">'+title+'</div><div class="ai-text">'+text+'</div></div></div>';
+}
+
+/* ===== 各屏 HTML ===== */
+function focusHTML(pid,st){
+ const f=st.focus,total=f.total,rem=f.remaining,fp=(total-rem)/total;
+ const tp=st.tasks.filter(t=>t.done).length/Math.max(1,st.tasks.length);
+ const btn=f.running
+   ? '<button class="btn btn-primary" data-action="focus-pause" data-phone="'+pid+'">暂停</button>'
+   : '<button class="btn btn-primary" data-action="focus-start" data-phone="'+pid+'">开始</button>';
+ return '<div class="screen-inner"><div class="scroll"><div class="pad">'
+  +'<div class="toprow"><div><div class="eyebrow">周五 · 8月29日</div><div class="h1">专注进行中</div></div><div class="badge-live">● 实时</div></div>'
+  +'<div class="ringwrap">'+ringSVG(pid,fp,0.55,tp,rem)+'</div>'
+  +'<div class="tasknow"><div class="tn-label">当前任务</div><div class="tn-name">写物理作业 <span class="chip chip-deep">深度</span></div></div>'
+  +aiBar('AI 建议','「今天状态不错，建议 30 分钟深度专注」')
+  +'<div class="mini-card"><div class="mc-title">本轮专注曲线</div>'+sparkline(f.curve,'var(--move)')+'</div>'
+  +'<div class="controls"><button class="btn btn-ghost" data-action="focus-end" data-phone="'+pid+'">结束</button>'+btn+'</div>'
+  +'</div></div>'+tabbar(pid,st,'focus')+'</div>';
+}
+function statsHTML(pid,st){
+ const v=st.weekly.view,data=v==='week'?st.stats.week:st.stats.month;
+ const total=v==='week'?23:96,hours=v==='week'?'9.5':'41.2';
+ const d=st.stats.dist;
+ const bar=(l,val,c)=>'<div class="bar-col"><div class="bar-track"><div class="bar-fill" style="height:'+val+'%;background:'+c+'"></div></div><div class="bar-val">'+val+'%</div><div class="bar-label">'+l+'</div></div>';
+ return '<div class="screen-inner"><div class="scroll"><div class="pad">'
+  +'<div class="toprow"><div class="eyebrow">数据看板</div><div class="h1">本周专注</div></div>'
+  +'<div class="bignums"><div class="bignum"><div class="bn-num">'+total+'<span class="bn-unit">个</span></div><div class="bn-label">本周番茄</div></div><div class="bignum"><div class="bn-num">'+hours+'<span class="bn-unit">h</span></div><div class="bn-label">专注时长</div></div></div>'
+  +'<div class="card"><div class="card-head"><span class="mc-title">7 日趋势</span><div class="seg"><button class="seg-btn '+(v==='week'?'on':'')+'" data-action="view" data-val="week" data-phone="'+pid+'">周</button><button class="seg-btn '+(v==='month'?'on':'')+'" data-action="view" data-val="month" data-phone="'+pid+'">月</button></div></div>'+sparkline(data,'var(--move)')+'</div>'
+  +'<div class="card"><div class="mc-title">时段分布</div><div class="bars">'+bar('晨',d.morning,'#FA114F')+bar('午',d.noon,'#A4F500')+bar('晚',d.evening,'#1EEAEF')+'</div></div>'
+  +aiBar('AI 洞察','「你周二下午最易分心，建议把深度任务放上午」')
+  +'</div></div>'+tabbar(pid,st,'stats')+'</div>';
+}
+function taskItem(pid,t,idx){
+ const on=t.done;
+ return '<div class="task '+(on?'done':'')+'" data-action="task-toggle" data-phone="'+pid+'" data-idx="'+idx+'"><div class="check '+(on?'on':'')+'">'+(on?IC.check:'')+'</div><div class="task-main"><div class="task-name">'+t.name+'</div><div class="task-meta"><span class="chip '+(t.type==='deep'?'chip-deep':'chip-shallow')+'">'+(t.type==='deep'?'深度':'浅层')+'</span>预计 '+t.est+' 番茄</div></div></div>';
+}
+function tasksHTML(pid,st){
+ const deep=st.tasks.filter(t=>t.type==='deep'),sh=st.tasks.filter(t=>t.type==='shallow');
+ return '<div class="screen-inner"><div class="scroll"><div class="pad">'
+  +'<div class="toprow"><div class="eyebrow">任务清单</div><div class="h1">今日安排</div></div>'
+  +'<div class="addrow"><input class="addin" id="'+pid+'-taskin" placeholder="添加任务…"/><button class="btn-add" data-action="task-add" data-phone="'+pid+'">+</button></div>'
+  +'<div class="group"><div class="group-head"><span class="dot deep"></span>深度工作 <span class="group-sub">'+deep.filter(t=>!t.done).length+' 项待做</span></div>'+deep.map(t=>taskItem(pid,t,st.tasks.indexOf(t))).join('')+'</div>'
+  +'<div class="group"><div class="group-head"><span class="dot shallow"></span>浅层事务 <span class="group-sub">'+sh.filter(t=>!t.done).length+' 项待做</span></div>'+sh.map(t=>taskItem(pid,t,st.tasks.indexOf(t))).join('')+'</div>'
+  +'</div></div>'+tabbar(pid,st,'tasks')+'</div>';
+}
+function toggle(key,val,pid){
+ return '<button class="switch '+(val?'on':'')+'" data-action="setting" data-key="'+key+'" data-phone="'+pid+'"><span class="knob"></span></button>';
+}
+function settingsHTML(pid,st){
+ const s=st.settings;
+ return '<div class="screen-inner"><div class="scroll"><div class="pad">'
+  +'<div class="toprow"><div class="eyebrow">设置</div><div class="h1">偏好</div></div>'
+  +'<div class="card"><div class="row-between"><span>每日番茄目标</span><div class="stepper"><button data-action="goal" data-dir="-1" data-phone="'+pid+'">−</button><span class="step-val">'+s.goal+'</span><button data-action="goal" data-dir="1" data-phone="'+pid+'">+</button></div></div></div>'
+  +'<div class="card"><div class="row-between"><div><div class="row-t">AI 建议</div><div class="row-s">根据状态给出专注建议</div></div>'+toggle('suggest',s.suggest,pid)+'</div><div class="divider"></div><div class="row-between"><div><div class="row-t">自动调度</div><div class="row-s">AI 自动安排专注时段</div></div>'+toggle('auto',s.auto,pid)+'</div></div>'
+  +'<div class="card"><div class="row-between"><span>声音与提醒</span><span class="muted">'+s.sound+' · 开</span></div><div class="divider"></div><div class="row-between"><div><div class="row-t">主题</div><div class="row-s">浅色 / 深色</div></div><div class="seg"><button class="seg-btn '+(s.theme==='light'?'on':'')+'" data-action="theme" data-val="light" data-phone="'+pid+'">浅</button><button class="seg-btn '+(s.theme==='dark'?'on':'')+'" data-action="theme" data-val="dark" data-phone="'+pid+'">深</button></div></div></div>'
+  +'<div class="card clickable" data-action="export" data-phone="'+pid+'"><div class="row-between"><span>导出数据</span><span class="muted">CSV · 「心流」</span></div></div>'
+  +'</div></div>'+tabbar(pid,st,'settings')+'</div>';
+}
+
+/* ===== 计时器逻辑 ===== */
+function stopInterval(st){ if(st.focus.interval){clearInterval(st.focus.interval);st.focus.interval=null;} }
+function startInterval(pid){
+ const st=phones[pid],f=st.focus;
+ f.interval=setInterval(()=>{
+   f.remaining--;
+   if(f.remaining<=0){f.remaining=0;updateRings(pid);pauseTimer(pid);return;}
+   updateRings(pid);
+ },1000);
+}
+function updateRings(pid){
+ const st=phones[pid],f=st.focus,rem=f.remaining,fp=(f.total-rem)/f.total;
+ const tp=st.tasks.filter(t=>t.done).length/Math.max(1,st.tasks.length);
+ const ps=[fp,0.55,tp];
+ RINGS.forEach((rg,i)=>{const C=ringCirc(rg.r),el=document.getElementById(pid+'-ring-'+i);if(el)el.style.strokeDashoffset=C*(1-ps[i]);});
+ const t=document.getElementById(pid+'-time');if(t)t.textContent=fmt(rem);
+}
+function startTimer(pid){phones[pid].focus.running=true;render(pid);startInterval(pid);}
+function pauseTimer(pid){phones[pid].focus.running=false;stopInterval(phones[pid]);render(pid);}
+function endTimer(pid){const f=phones[pid].focus;f.running=false;stopInterval(phones[pid]);f.remaining=f.total;render(pid);}
+
+/* ===== 渲染与路由 ===== */
+function applyTheme(pid,st){
+ const el=document.getElementById(pid);
+ if(st.settings.theme==='dark')el.classList.add('dark');else el.classList.remove('dark');
+}
+function render(pid){
+ const st=phones[pid];
+ if(st.screen!=='focus')stopInterval(st);
+ const el=document.getElementById('c-'+pid);
+ let h='';
+ if(st.screen==='focus')h=focusHTML(pid,st);
+ else if(st.screen==='stats')h=statsHTML(pid,st);
+ else if(st.screen==='tasks')h=tasksHTML(pid,st);
+ else h=settingsHTML(pid,st);
+ el.innerHTML=h;
+ applyTheme(pid,st);
+ if(st.screen==='focus'&&st.focus.running)startInterval(pid);
+}
+function switchScreen(pid,scr){phones[pid].screen=scr;render(pid);}
+function guessType(n){return /复习|写|作业|阅读|论文|备考|编程|设计/.test(n)?'deep':'shallow';}
+
+function toast(pid,msg){
+ const screen=document.getElementById(pid).querySelector('.screen');
+ let t=screen.querySelector('.toast');
+ if(!t){t=document.createElement('div');t.className='toast';screen.appendChild(t);}
+ t.textContent=msg;t.classList.add('show');
+ setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+document.addEventListener('click',e=>{
+ const el=e.target.closest('[data-action]');if(!el)return;
+ const a=el.dataset.action,pid=el.dataset.phone,st=phones[pid];
+ if(a==='tab')switchScreen(pid,el.dataset.screen);
+ else if(a==='focus-start')startTimer(pid);
+ else if(a==='focus-pause')pauseTimer(pid);
+ else if(a==='focus-end')endTimer(pid);
+ else if(a==='view'){st.weekly.view=el.dataset.val;render(pid);}
+ else if(a==='task-add'){const inp=document.getElementById(pid+'-taskin');const v=(inp.value||'').trim();if(v){st.tasks.push({name:v,type:guessType(v),est:1,done:false});}render(pid);}
+ else if(a==='task-toggle'){const i=+el.dataset.idx;st.tasks[i].done=!st.tasks[i].done;render(pid);}
+ else if(a==='goal'){st.settings.goal=Math.max(1,st.settings.goal+(+el.dataset.dir));render(pid);}
+ else if(a==='setting'){const k=el.dataset.key;st.settings[k]=!st.settings[k];render(pid);}
+ else if(a==='theme'){st.settings.theme=el.dataset.val;render(pid);}
+ else if(a==='export'){toast(pid,'已生成 CSV 导出文件');}
+});
+
+Object.keys(phones).forEach(render);
+</script>
+</body>
+</html>

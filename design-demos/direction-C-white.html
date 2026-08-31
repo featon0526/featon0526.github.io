@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>心流 Flow · 方向 C「白」</title>
+<style>
+/* ===== iPhone frame template (verbatim) ===== */
+.phone{display:inline-block;padding:12px;background:#000;border-radius:60px;box-shadow:0 0 0 2px #1f2937,0 20px 60px rgba(0,0,0,.3);position:relative;}
+.phone .screen{position:relative;border-radius:48px;overflow:hidden;width:393px;height:852px;background:#fff;}
+.phone .statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;font-size:16px;font-weight:600;font-family:-apple-system,"SF Pro Text",sans-serif;z-index:20;pointer-events:none;color:#000;}
+.phone .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:124px;height:36px;background:#000;border-radius:999px;z-index:30;}
+.phone .content{position:absolute;top:54px;left:0;right:0;bottom:34px;overflow:auto;}
+.phone .homeindicator{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:140px;height:5px;background:rgba(0,0,0,.3);border-radius:999px;z-index:10;}
+.phone.dark .statusbar{color:#fff;}
+.phone.dark .homeindicator{background:rgba(255,255,255,.5);}
+
+/* ===== page ===== */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--serif:"Songti SC","Noto Serif SC","Source Han Serif SC",Georgia,serif;
+--sans:-apple-system,"SF Pro Text","PingFang SC","Helvetica Neue",sans-serif;}
+body{background:#EDEAE1;font-family:var(--sans);color:#1A1A1A;padding:56px 48px 72px;}
+.pagehead{max-width:1100px;margin:0 auto 44px;}
+.pagehead .kicker{font-size:14px;letter-spacing:.34em;color:#77736A;text-transform:uppercase;}
+.pagehead h1{font-family:var(--serif);font-weight:400;font-size:46px;letter-spacing:.06em;margin:18px 0 0;}
+.pagehead h1 em{font-style:italic;color:#C8442E;}
+.pagehead p{max-width:620px;margin-top:18px;font-size:15px;line-height:1.95;color:#5C5952;}
+.pal{display:flex;gap:28px;margin-top:26px;align-items:flex-end;}
+.pal div{font-size:13px;color:#77736A;letter-spacing:.08em;}
+.pal i{display:block;width:52px;height:52px;border:1px solid rgba(0,0,0,.12);margin-bottom:8px;}
+.rail{white-space:nowrap;overflow-x:auto;padding:8px 0 32px;}
+.slot{display:inline-block;vertical-align:top;margin-right:46px;text-align:left;}
+.slot .cap{font-family:var(--serif);font-style:italic;font-size:15px;color:#5C5952;letter-spacing:.1em;margin:0 0 16px 26px;}
+.slot .cap b{font-style:normal;font-weight:400;color:#C8442E;margin-right:8px;}
+
+/* ===== app shell ===== */
+.screen{--bg:#FAF9F6;--ink:#1A1A1A;--ink2:#5C5952;--ink3:#77736A;--line:#E2DED3;--line2:#EFECE3;--red:#C8442E;}
+.screen.ink{--bg:#191814;--ink:#F4F2EC;--ink2:#BAB5AA;--ink3:#928D80;--line:#34322B;--line2:#26241F;--red:#E0644B;}
+.phone .screen{background:var(--bg);color:var(--ink);}
+.phone .content{background:var(--bg);}
+.app{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;}
+.pane{flex:1;overflow-y:auto;padding:14px 30px 34px;}
+.srow{display:flex;justify-content:space-between;align-items:baseline;}
+.eyebrow{font-size:14px;letter-spacing:.22em;color:var(--ink3);}
+.ttl{font-family:var(--serif);font-weight:400;font-size:30px;letter-spacing:.08em;}
+.hr{height:1px;background:var(--line);}
+.hr.soft{background:var(--line2);}
+.serif{font-family:var(--serif);font-weight:400;}
+.num{font-family:var(--serif);font-variant-numeric:tabular-nums;font-weight:400;}
+.mono{font-variant-numeric:tabular-nums;}
+
+/* AI quote — the signature */
+.quote{position:relative;padding:20px 4px 20px 26px;}
+.quote:before{content:"";position:absolute;left:0;top:22px;bottom:22px;width:1px;background:var(--red);}
+.quote .tag{font-size:13px;letter-spacing:.3em;color:var(--red);margin-bottom:10px;}
+.quote p{font-family:var(--serif);font-style:italic;font-size:19px;line-height:1.85;color:var(--ink);letter-spacing:.03em;}
+.quote .by{margin-top:10px;font-size:14px;color:var(--ink3);}
+
+/* buttons */
+.btn{font-family:var(--sans);font-size:16px;letter-spacing:.14em;padding:16px 0;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;flex:1;}
+.btn.solid{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.ghost{border-color:var(--line);color:var(--ink2);}
+.btn:active{opacity:.7;}
+.seg{display:flex;gap:22px;}
+.seg button{background:none;border:0;font-family:var(--sans);font-size:15px;color:var(--ink3);padding:4px 0 7px;cursor:pointer;border-bottom:1px solid transparent;letter-spacing:.1em;}
+.seg button.on{color:var(--red);border-bottom-color:var(--red);}
+
+/* toggle */
+.tg{width:46px;height:26px;border-radius:999px;background:var(--line);position:relative;border:0;cursor:pointer;flex:none;transition:background .18s;}
+.tg span{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:999px;background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.28);transition:left .18s;}
+.tg.on{background:var(--red);}
+.tg.on span{left:23px;}
+.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 0;}
+.row .lb{font-size:16px;}
+.row .sb{font-size:14px;color:var(--ink3);margin-top:5px;line-height:1.6;}
+
+/* tasks */
+.tk{display:flex;align-items:flex-start;gap:14px;padding:15px 0;}
+.cb{width:21px;height:21px;border-radius:999px;border:1px solid var(--ink3);background:transparent;cursor:pointer;flex:none;margin-top:2px;display:flex;align-items:center;justify-content:center;padding:0;}
+.cb.on{background:var(--red);border-color:var(--red);}
+.tk.done .nm{text-decoration:line-through;color:var(--ink3);}
+.tk.done{opacity:.55;}
+.nm{font-size:16px;line-height:1.5;}
+.mt{font-size:14px;color:var(--ink3);margin-top:6px;letter-spacing:.04em;}
+.pip{display:inline-block;width:5px;height:5px;border-radius:9px;background:var(--red);margin-right:5px;vertical-align:middle;opacity:.85;}
+.pip.o{background:none;box-shadow:inset 0 0 0 1px var(--ink3);}
+.add{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px;}
+.add input{flex:1;border:0;background:transparent;font-family:var(--sans);font-size:16px;color:var(--ink);outline:none;}
+.add input::placeholder{color:var(--ink3);}
+.add button{border:0;background:none;font-family:var(--serif);font-size:17px;color:var(--red);cursor:pointer;letter-spacing:.1em;}
+
+/* tabbar */
+.tabbar{flex:none;height:76px;display:flex;background:var(--bg);border-top:1px solid var(--line);}
+.tabbar button{flex:1;background:none;border:0;cursor:pointer;color:var(--ink3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding-bottom:4px;}
+.tabbar button.on{color:var(--red);}
+.tabbar span{font-size:12px;letter-spacing:.1em;}
+.tabbar svg{width:21px;height:21px;}
+</style>
+</head>
+<body>
+
+<div class="pagehead">
+  <div class="kicker">Direction C</div>
+  <h1>心流 Flow · <em>白</em></h1>
+  <p>以原研哉 / 无印良品的「白」为方法：暖白为底，墨黑为骨，朱红只作一处点睛。番茄钟是「时间的圆」，AI 是「一句被写下的话」——用衬线斜体引语出现，而非弹窗与图标。留白是构图，不是缺席。</p>
+  <div class="pal">
+    <div><i style="background:#FAF9F6"></i>暖白 FAF9F6</div>
+    <div><i style="background:#1A1A1A"></i>墨黑 1A1A1A</div>
+    <div><i style="background:#C8442E"></i>朱 C8442E</div>
+    <div><i style="background:#E2DED3"></i>纸线 E2DED3</div>
+  </div>
+</div>
+
+<div class="rail" id="rail"></div>
+
+<script>
+/* ================= icons ================= */
+var I={
+timer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3.2 2"/></svg>',
+stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 20h16M7 20V11M12 20V5M17 20v-6"/></svg>',
+tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M9 7h11M9 12h11M9 17h11M4.6 7h.01M4.6 12h.01M4.6 17h.01"/></svg>',
+set:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2"/><circle cx="10" cy="16" r="2"/></svg>',
+chk:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.6"><path d="M5 12.5l4.4 4.4L19 7.4"/></svg>',
+arw:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 5l7 7-7 7"/></svg>'};
+
+/* ================= state ================= */
+function seedCurve(){var a=[],i;for(i=0;i<44;i++)a.push(58+22*Math.sin(i/6.2)+(i%5)*1.6);return a;}
+function newState(scr){return{
+ screen:scr,total:1800,left:1800,run:false,tid:null,round:3,curve:seedCurve(),t:0,
+ range:'week',expo:false,
+ goal:6,ai1:true,ai2:false,snd:true,tone:'木鱼',theme:'light',
+ tasks:[
+  {id:1,n:'写物理作业',k:'d',p:3,done:false},
+  {id:2,n:'精读英语阅读 D 篇',k:'d',p:2,done:false},
+  {id:3,n:'数学压轴题复盘',k:'d',p:4,done:false},
+  {id:4,n:'整理错题本',k:'s',p:1,done:false},
+  {id:5,n:'打印实验报告',k:'s',p:1,done:true}]};}
+var S=[newState('timer'),newState('stats'),newState('tasks'),newState('settings')];
+S[1].round=4;S[2].round=2;S[3].round=5;
+S[1].left=1160;S[2].left=1502;S[3].left=740;
+
+/* ================= helpers ================= */
+function fmt(s){var m=Math.floor(s/60),x=s%60;return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;}
+function el(i){return document.getElementById('ph'+i);}
+function ct(i){return el(i).querySelector('.content');}
+function pts(a,w,h,lo,hi){var n=a.length,o=[],j;for(j=0;j<n;j++){var x=j*(w/(n-1)),y=h-(a[j]-lo)/(hi-lo)*h;o.push(x.toFixed(1)+','+Math.max(0.5,Math.min(h-.5,y)).toFixed(1));}return o.join(' ');}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* ================= screen 1 · 专注计时 ================= */
+var C=2*Math.PI*110;
+function ringTicks(){var s='',k;for(k=0;k<60;k++){var a=k*6*Math.PI/180-Math.PI/2,big=k%5===0,r1=big?117:120,r2=124;
+ s+='<line x1="'+(130+r1*Math.cos(a)).toFixed(1)+'" y1="'+(130+r1*Math.sin(a)).toFixed(1)+'" x2="'+(130+r2*Math.cos(a)).toFixed(1)+'" y2="'+(130+r2*Math.sin(a)).toFixed(1)+'" stroke="'+(big?'var(--ink3)':'var(--line)')+'" stroke-width="1"/>';}
+ return s;}
+function vTimer(i){var s=S[i],p=(s.total-s.left)/s.total,cur=s.tasks.filter(function(t){return !t.done&&t.k==='d';})[0]||s.tasks[0];
+ var a=-Math.PI/2+p*2*Math.PI;
+ return '<div class="pane">'
+ +'<div class="srow" style="padding:8px 0 0"><div class="eyebrow">第 '+s.round+' / '+s.goal+' 个番茄</div><div class="eyebrow" style="color:var(--ink2)">'+(s.run?'专注中':'待开始')+'</div></div>'
+ +'<div style="text-align:center;margin:16px 0 2px"><svg viewBox="0 0 260 260" width="228" height="228" style="overflow:visible">'
+ +ringTicks()
+ +'<circle cx="130" cy="130" r="110" fill="none" stroke="var(--line)" stroke-width="1"/>'
+ +'<circle id="arc'+i+'" cx="130" cy="130" r="110" fill="none" stroke="var(--red)" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-p)).toFixed(1)+'" transform="rotate(-90 130 130)"/>'
+ +'<circle id="dot'+i+'" cx="'+(130+110*Math.cos(a)).toFixed(1)+'" cy="'+(130+110*Math.sin(a)).toFixed(1)+'" r="4" fill="var(--red)"/>'
+ +'<text id="tm'+i+'" x="130" y="140" text-anchor="middle" font-family="Songti SC,Noto Serif SC,Georgia,serif" font-size="62" fill="var(--ink)" letter-spacing="2">'+fmt(s.left)+'</text>'
+ +'<text x="130" y="170" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="14" fill="var(--ink3)" letter-spacing="5">DEEP  WORK</text>'
+ +'</svg></div>'
+ +'<div class="hr soft" style="margin:8px 0 16px"></div>'
+ +'<div class="srow"><div><div class="eyebrow" style="font-size:13px">当前任务</div><div class="serif" style="font-size:23px;margin-top:8px;letter-spacing:.06em">「'+esc(cur.n)+'」</div></div>'
+ +'<div style="text-align:right"><div class="eyebrow" style="font-size:13px">预计</div><div class="num" style="font-size:23px;margin-top:8px">'+cur.p+' 番茄</div></div></div>'
+ +'<div class="quote" style="margin:18px 0 6px"><div class="tag">AI</div><p>「今天状态不错，建议 30 分钟深度专注。」</p><div class="by">依据近 14 日 09:00–11:00 完成率 87%</div></div>'
+ +'<div class="hr soft" style="margin:6px 0 14px"></div>'
+ +'<div class="srow" style="align-items:center"><div class="eyebrow" style="font-size:13px">本轮专注度</div><div class="mono" style="font-size:15px;color:var(--ink2)"><span id="pc'+i+'">'+Math.round(s.curve[s.curve.length-1])+'</span> / 100</div></div>'
+ +'<svg width="333" height="44" viewBox="0 0 333 44" style="margin-top:10px;display:block"><polyline id="cv'+i+'" fill="none" stroke="var(--ink)" stroke-width="1.2" points="'+pts(s.curve,333,44,10,105)+'"/></svg>'
+ +'<div style="display:flex;gap:12px;margin-top:20px">'
+ +'<button class="btn '+(s.run?'ghost':'red')+'" onclick="tog('+i+')">'+(s.run?'暂 停':'开 始')+'</button>'
+ +'<button class="btn ghost" onclick="fin('+i+')">结 束</button></div>'
+ +'</div>'+tabs(i);}
+
+function tog(i){var s=S[i];s.run=!s.run;
+ if(s.run){s.tid=setInterval(function(){tick(i);},1000);}else{clearInterval(s.tid);s.tid=null;}
+ draw(i);}
+function fin(i){var s=S[i];if(s.tid){clearInterval(s.tid);s.tid=null;}s.run=false;s.left=s.total;s.round++;s.curve=seedCurve();draw(i);}
+function tick(i){var s=S[i];if(s.left<=0){clearInterval(s.tid);s.tid=null;s.run=false;draw(i);return;}
+ s.left--;s.t++;s.curve.push(Math.max(18,Math.min(100,62+24*Math.sin(s.t/5.5)+(Math.random()*10-5))));if(s.curve.length>44)s.curve.shift();
+ if(s.screen!=='timer')return;
+ var p=(s.total-s.left)/s.total,a=-Math.PI/2+p*2*Math.PI,q;
+ q=document.getElementById('tm'+i);if(q)q.textContent=fmt(s.left);
+ q=document.getElementById('arc'+i);if(q)q.setAttribute('stroke-dashoffset',(C*(1-p)).toFixed(1));
+ q=document.getElementById('dot'+i);if(q){q.setAttribute('cx',(130+110*Math.cos(a)).toFixed(1));q.setAttribute('cy',(130+110*Math.sin(a)).toFixed(1));}
+ q=document.getElementById('cv'+i);if(q)q.setAttribute('points',pts(s.curve,333,44,10,105));
+ q=document.getElementById('pc'+i);if(q)q.textContent=Math.round(s.curve[s.curve.length-1]);}
+
+/* ================= screen 2 · 统计 ================= */
+var WK={lab:['一','二','三','四','五','六','日'],v:[2,4,3,5,1,4,4],sum:'23',hr:'9.5',
+ seg:[['晨 06–12',42],['午 12–18',31],['晚 18–24',27]],ins:'「你周二下午最易分心，建议把深度任务放上午。」',src:'周二 14:00–17:00 中断 6 次 · 高于均值 3.1 倍'};
+var MO={lab:['W1','W2','W3','W4'],v:[18,25,21,23],sum:'87',hr:'36.2',
+ seg:[['晨 06–12',38],['午 12–18',34],['晚 18–24',28]],ins:'「本月晚间专注上升 9%，睡前一轮浅层收尾很适合你。」',src:'对比上月 18:00 后番茄数 +9.4%'};
+function vStats(i){var s=S[i],D=s.range==='week'?WK:MO,n=D.v.length,mx=Math.max.apply(null,D.v),j,bars='';
+ for(j=0;j<n;j++){var h=Math.round(14+(D.v[j]/mx)*74),w=n===7?26:52,gp=n===7?18:36;
+  bars+='<div style="width:'+w+'px;text-align:center"><div class="mono" style="font-size:14px;color:var(--ink2);margin-bottom:7px">'+D.v[j]+'</div>'
+  +'<div style="height:'+h+'px;background:'+(D.v[j]===mx?'var(--red)':'var(--ink)')+';opacity:'+(D.v[j]===mx?1:.82)+'"></div>'
+  +'<div style="font-size:14px;color:var(--ink3);margin-top:9px">'+D.lab[j]+'</div></div>';}
+ var segs='';for(j=0;j<D.seg.length;j++){var t=D.seg[j];
+  segs+='<div style="padding:13px 0"><div class="srow" style="align-items:center"><div style="font-size:15px;color:var(--ink2);letter-spacing:.04em">'+t[0]+'</div><div class="num" style="font-size:18px">'+t[1]+'%</div></div>'
+  +'<div style="height:2px;background:var(--line2);margin-top:9px"><div style="height:2px;width:'+t[1]+'%;background:'+(j===0?'var(--red)':'var(--ink)')+'"></div></div></div>';}
+ return '<div class="pane">'
+ +'<div class="srow" style="padding:10px 0 0"><div class="ttl">统计</div><div class="seg">'
+ +'<button class="'+(s.range==='week'?'on':'')+'" onclick="rng('+i+',\'week\')">周</button>'
+ +'<button class="'+(s.range==='month'?'on':'')+'" onclick="rng('+i+',\'month\')">月</button></div></div>'
+ +'<div class="hr" style="margin:18px 0 0"></div>'
+ +'<div style="display:flex">'
+ +'<div style="flex:1;padding:26px 0 24px"><div class="num" style="font-size:60px;line-height:1">'+D.sum+'</div><div style="font-size:15px;color:var(--ink3);margin-top:10px;letter-spacing:.1em">'+(s.range==='week'?'本周番茄':'本月番茄')+'</div></div>'
+ +'<div style="width:1px;background:var(--line);margin:26px 0 24px"></div>'
+ +'<div style="flex:1;padding:26px 0 24px 26px"><div class="num" style="font-size:60px;line-height:1">'+D.hr+'<span style="font-size:26px">h</span></div><div style="font-size:15px;color:var(--ink3);margin-top:10px;letter-spacing:.1em">专注总时长</div></div>'
+ +'</div><div class="hr"></div>'
+ +'<div class="eyebrow" style="font-size:13px;margin:22px 0 4px">'+(s.range==='week'?'7 日趋势':'4 周趋势')+'</div>'
+ +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;height:132px">'+bars+'</div>'
+ +'<div class="hr soft" style="margin:18px 0 6px"></div>'
+ +'<div class="eyebrow" style="font-size:13px;margin:14px 0 2px">按时段分布</div>'+segs
+ +'<div class="hr soft" style="margin:8px 0 4px"></div>'
+ +'<div class="quote" style="margin-top:12px"><div class="tag">AI 洞察</div><p>'+D.ins+'</p><div class="by">'+D.src+'</div></div>'
+ +'</div>'+tabs(i);}
+function rng(i,r){S[i].range=r;draw(i);}
+
+/* ================= screen 3 · 任务清单 ================= */
+function vTasks(i){var s=S[i],d=[],h=[],j;
+ for(j=0;j<s.tasks.length;j++)(s.tasks[j].k==='d'?d:h).push(s.tasks[j]);
+ function grp(list,ti,sub){var o='<div class="srow" style="align-items:baseline;margin-bottom:2px"><div class="serif" style="font-size:19px;letter-spacing:.1em">'+ti+'</div>'
+  +'<div style="font-size:14px;color:var(--ink3)">'+list.filter(function(t){return !t.done;}).length+' / '+list.length+'</div></div>'
+  +'<div style="font-size:14px;color:var(--ink3);margin-bottom:6px">'+sub+'</div><div class="hr" style="margin-bottom:4px"></div>';
+  if(!list.length)o+='<div style="font-size:14px;color:var(--ink3);padding:16px 0">暂无</div>';
+  for(var k=0;k<list.length;k++){var t=list[k],pp='';
+   for(var m=0;m<t.p;m++)pp+='<span class="pip'+(t.done?' o':'')+'"></span>';
+   o+='<div class="tk'+(t.done?' done':'')+'"><button class="cb'+(t.done?' on':'')+'" onclick="chk('+i+','+t.id+')">'+(t.done?I.chk:'')+'</button>'
+   +'<div style="flex:1"><div class="nm">'+esc(t.n)+'</div><div class="mt">'+pp+' 预计 '+t.p+' 番茄 · AI 判定 '+(t.k==='d'?'深度':'浅层')+'</div></div></div>'
+   +(k<list.length-1?'<div class="hr soft"></div>':'');}
+  return o;}
+ var doneN=s.tasks.filter(function(t){return t.done;}).length;
+ return '<div class="pane">'
+ +'<div class="srow" style="padding:10px 0 0"><div class="ttl">任务</div><div style="font-size:15px;color:var(--ink3)">今日 '+doneN+' / '+s.tasks.length+' 完成</div></div>'
+ +'<div class="add" style="margin:22px 0 8px"><input id="in'+i+'" placeholder="写下一件要做的事…" onkeydown="if(event.key===\'Enter\')addT('+i+')"><button onclick="addT('+i+')">加入</button></div>'
+ +'<div style="font-size:14px;color:var(--ink3);margin-bottom:24px">AI 会自动判定深度 / 浅层并预估番茄数</div>'
+ +grp(d,'深度工作','需要连续 25 分钟以上不被打断')
+ +'<div style="height:34px"></div>'
+ +grp(h,'浅层事务','可在休息间隙或碎片时间处理')
+ +'<div class="hr soft" style="margin:26px 0 0"></div>'
+ +'<div class="quote"><div class="tag">AI</div><p>「深度任务已占 9 个番茄，超出今日目标 3 个，建议把「数学压轴题复盘」移到明早。」</p></div>'
+ +'</div>'+tabs(i);}
+function chk(i,id){var a=S[i].tasks,j;for(j=0;j<a.length;j++)if(a[j].id===id)a[j].done=!a[j].done;draw(i);}
+function addT(i){var b=document.getElementById('in'+i);if(!b)return;var v=b.value.trim();if(!v)return;
+ var deep=/写|读|复盘|论文|题|背|练|设计|方案|学|作业/.test(v)||v.length>=7;
+ S[i].tasks.push({id:Date.now()%100000,n:v,k:deep?'d':'s',p:deep?(v.length>9?3:2):1,done:false});
+ draw(i);var nb=document.getElementById('in'+i);if(nb)nb.focus();}
+
+/* ================= screen 4 · 设置 ================= */
+function vSet(i){var s=S[i];
+ function tgl(k,lb,sb){return '<div class="row"><div style="flex:1"><div class="lb">'+lb+'</div><div class="sb">'+sb+'</div></div>'
+  +'<button class="tg'+(s[k]?' on':'')+'" onclick="sw('+i+',\''+k+'\')"><span></span></button></div>';}
+ var tones=['钟声','木鱼','无'],tb='';
+ for(var j=0;j<tones.length;j++)tb+='<button class="'+(s.tone===tones[j]?'on':'')+'" onclick="setTone('+i+',\''+tones[j]+'\')">'+tones[j]+'</button>';
+ return '<div class="pane">'
+ +'<div style="padding:10px 0 0"><div class="ttl">设置</div></div>'
+ +'<div class="hr" style="margin:18px 0 0"></div>'
+ +'<div class="eyebrow" style="font-size:13px;margin:22px 0 2px">每日目标</div>'
+ +'<div class="row" style="align-items:flex-end"><div style="flex:1"><div class="num" style="font-size:52px;line-height:1.05">'+s.goal+'<span style="font-size:20px;letter-spacing:.1em"> 个番茄</span></div>'
+ +'<div class="sb">约 '+(s.goal*25/60).toFixed(1)+' 小时深度时间 · 近 7 日均值 3.3 个</div></div>'
+ +'<div style="display:flex;gap:10px"><button class="btn ghost" style="flex:none;width:46px;padding:11px 0;font-size:19px" onclick="gl('+i+',-1)">−</button>'
+ +'<button class="btn ghost" style="flex:none;width:46px;padding:11px 0;font-size:19px" onclick="gl('+i+',1)">+</button></div></div>'
+ +'<div class="hr soft"></div>'
+ +'<div class="eyebrow" style="font-size:13px;margin:24px 0 2px">AI 强度</div>'
+ +tgl('ai1','建议','每轮开始前给出一句时长建议，你可忽略')
+ +'<div class="hr soft"></div>'
+ +tgl('ai2','自动调度','由 AI 直接决定时长与休息，不再询问')
+ +'<div class="quote" style="margin:8px 0 4px"><div class="tag">AI</div><p>'+(s.ai2?'「已交由我安排：下一轮 32 分钟，休息 7 分钟。」':(s.ai1?'「我只在你开始前轻声提一句，决定权仍在你。」':'「已静默。你可以随时把我叫回来。」'))+'</p></div>'
+ +'<div class="hr soft"></div>'
+ +tgl('snd','声音与提醒','结束时播放提示音并震动一次')
+ +'<div class="row" style="padding-top:2px"><div class="lb" style="color:var(--ink2);font-size:15px">提示音</div><div class="seg">'+tb+'</div></div>'
+ +'<div class="hr soft"></div>'
+ +'<div class="row"><div style="flex:1"><div class="lb">主题</div><div class="sb">白纸为默认。夜里可换墨色。</div></div>'
+ +'<div class="seg"><button class="'+(s.theme==='light'?'on':'')+'" onclick="th('+i+',\'light\')">纸白</button>'
+ +'<button class="'+(s.theme==='ink'?'on':'')+'" onclick="th('+i+',\'ink\')">墨色</button></div></div>'
+ +'<div class="hr soft"></div>'
+ +'<div class="row" style="cursor:pointer" onclick="ex('+i+')"><div style="flex:1"><div class="lb">数据导出</div><div class="sb">'+(s.expo?'已生成 flow-2026-08.csv · 12.4 KB · 含 87 条记录':'导出全部专注记录为 CSV')+'</div></div>'
+ +'<div style="color:'+(s.expo?'var(--red)':'var(--ink3)')+';display:flex;align-items:center;gap:8px;font-size:15px">'+(s.expo?'已就绪':'导出')+I.arw+'</div></div>'
+ +'<div class="hr soft"></div>'
+ +'<div style="font-size:14px;color:var(--ink3);padding:22px 0 0;letter-spacing:.06em">心流 Flow 1.4.0 · 本地存储 · 不上传任何专注内容</div>'
+ +'</div>'+tabs(i);}
+function sw(i,k){S[i][k]=!S[i][k];draw(i);}
+function gl(i,d){S[i].goal=Math.max(1,Math.min(16,S[i].goal+d));draw(i);}
+function setTone(i,t){S[i].tone=t;S[i].snd=(t!=='无');draw(i);}
+function ex(i){S[i].expo=!S[i].expo;draw(i);}
+function th(i,t){S[i].theme=t;var sc=el(i).querySelector('.screen');
+ if(t==='ink'){sc.classList.add('ink');el(i).classList.add('dark');}else{sc.classList.remove('ink');el(i).classList.remove('dark');}
+ draw(i);}
+
+/* ================= shell ================= */
+function tabs(i){var s=S[i],d=[['timer','计时',I.timer],['stats','统计',I.stats],['tasks','任务',I.tasks],['settings','设置',I.set]],o='<div class="tabbar">',j;
+ for(j=0;j<4;j++)o+='<button class="'+(s.screen===d[j][0]?'on':'')+'" onclick="go('+i+',\''+d[j][0]+'\')">'+d[j][2]+'<span>'+d[j][1]+'</span></button>';
+ return o+'</div>';}
+function go(i,scr){S[i].screen=scr;draw(i);}
+function draw(i){var s=S[i],v;
+ v=s.screen==='timer'?vTimer(i):s.screen==='stats'?vStats(i):s.screen==='tasks'?vTasks(i):vSet(i);
+ ct(i).innerHTML='<div class="app">'+v+'</div>';}
+
+var SBAR='<svg width="72" height="13" viewBox="0 0 72 13" fill="currentColor" style="vertical-align:middle">'
++'<rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3.5" width="3" height="8.5" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/>'
++'<path d="M27.4 4.3a7.6 7.6 0 0 1 9.2 0l-1.3 1.5a5.7 5.7 0 0 0-6.6 0zM29.8 7.3a4.2 4.2 0 0 1 4.4 0L32 9.9z"/>'
++'<rect x="46" y="2" width="21" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1" opacity=".45"/>'
++'<rect x="47.6" y="3.6" width="14" height="6.8" rx="1.6"/><path d="M68.4 5.4v4.2a2.3 2.3 0 0 0 0-4.2z" opacity=".45"/></svg>';
+var CAPS=[['屏 1','专注计时 · 时间的圆'],['屏 2','统计 · 可复盘的趋势'],['屏 3','任务清单 · AI 分深浅'],['屏 4','设置 · 交出多少给 AI']];
+var CLK=['9:41','13:20','21:07','22:48'];
+(function(){var h='',i;
+ for(i=0;i<4;i++){
+  h+='<div class="slot"><div class="cap"><b>'+CAPS[i][0]+'</b>'+CAPS[i][1]+'</div>'
+  +'<div class="phone" id="ph'+i+'"><div class="screen">'
+  +'<div class="island"></div>'
+  +'<div class="statusbar"><span>'+CLK[i]+'</span><span>'+SBAR+'</span></div>'
+  +'<div class="content"></div>'
+  +'<div class="homeindicator"></div>'
+  +'</div></div></div>';}
+ document.getElementById('rail').innerHTML=h;
+ for(i=0;i<4;i++)draw(i);
+ // 屏 1 默认已在计时中，让原型一打开就有生命
+ S[0].run=true;S[0].tid=setInterval(function(){tick(0);},1000);draw(0);
+})();
+</script>
+</body>
+</html>

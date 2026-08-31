@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>featon0526 · 交互作品集</title>
+<meta name="description" content="featon0526 的交互作品集导航：3D 空间交互、数据可视化、声音与音乐，共 13 件作品。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   featon0526 · 交互作品集导航（方向 A）
+   视觉逻辑：Pure-CSS Art（Lynn Fisher 系）——「几何即插画」
+   · 扁平高对比色块，零图片、零外部素材
+   · 左上角几何标在桌面 / 平板 / 手机重组成三种不同形状（断点变形彩蛋）
+   · 装饰色在断点间轮换，导航色保持稳定以保证可用性
+   ============================================================ */
+
+:root{
+  --ink:#141210;          /* 主文字 / 主线条 */
+  --ink-soft:#4A423C;     /* 次级文字，对比度 8:1 */
+  --paper:#F5F0E6;        /* 底色（暖白） */
+  --paper-2:#EAE1D0;      /* 次底色 */
+  --red:#E24127;
+  --teal:#0E6E66;
+  --gold:#EFB111;
+
+  /* 装饰专用色（随断点轮换，制造 Lynn Fisher 式换调色） */
+  --d1:var(--red);
+  --d2:var(--gold);
+  --d3:var(--teal);
+
+  --line:3px;
+  --rail-w:308px;
+  --font:"Archivo","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",system-ui,sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--font);
+  font-size:15px;
+  line-height:1.55;
+  color:var(--ink);
+  background:var(--paper);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+h1,h2,p,ul{margin:0;}
+ul{list-style:none;padding:0;}
+::selection{background:var(--gold);color:var(--ink);}
+:focus-visible{outline:var(--line) solid var(--teal);outline-offset:2px;}
+
+/* ---------- header ---------- */
+.masthead{
+  flex:0 0 auto;
+  border-bottom:var(--line) solid var(--ink);
+  background:var(--paper);
+  position:relative;
+}
+.masthead-in{
+  display:flex;
+  align-items:center;
+  gap:22px;
+  padding:16px 24px 14px;
+}
+
+/* 纯 CSS 几何标：断点变形彩蛋 */
+.mark{
+  position:relative;
+  display:block;
+  flex:0 0 auto;
+  width:112px;height:72px;
+  transition:width .25s ease,height .25s ease;
+}
+.mark i{position:absolute;display:block;}
+.m1{left:0;top:0;width:32%;height:100%;background:var(--ink);}
+.m2{left:36%;top:0;width:30%;height:48%;background:var(--d2);
+    clip-path:polygon(0 0,100% 0,100% 100%);}
+.m3{left:36%;top:52%;width:30%;height:48%;background:var(--d3);border-radius:50%;}
+.m4{left:70%;top:0;width:30%;height:100%;background:var(--d1);
+    border-radius:0 100% 100% 0 / 0 50% 50% 0;}
+.m5{left:33%;top:0;width:2px;height:100%;background:var(--ink);}
+
+.brand-txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.brand-txt strong{
+  font-size:29px;font-weight:900;letter-spacing:-.02em;line-height:1;
+}
+.brand-txt strong span{color:var(--teal);}
+.brand-txt em{
+  font-style:normal;font-size:13px;font-weight:500;
+  color:var(--ink-soft);letter-spacing:.06em;
+}
+
+.count{
+  margin-left:auto;
+  display:flex;align-items:stretch;gap:0;
+  border:var(--line) solid var(--ink);
+  background:var(--paper);
+}
+.count b{
+  font-size:34px;font-weight:900;line-height:1;
+  padding:8px 12px 6px;
+  background:var(--gold);color:var(--ink);
+  border-right:var(--line) solid var(--ink);
+}
+.count span{
+  align-self:center;
+  padding:0 12px;
+  font-size:12px;font-weight:700;line-height:1.25;
+  letter-spacing:.1em;color:var(--ink);
+}
+
+/* 分组配比条：数据本身就是几何插画 4 / 7 / 2 */
+.ratio{display:flex;height:12px;border-top:var(--line) solid var(--ink);}
+.ratio i{display:block;height:100%;}
+.ratio i:nth-child(1){width:30.8%;background:var(--red);}
+.ratio i:nth-child(2){width:53.8%;background:var(--teal);}
+.ratio i:nth-child(3){width:15.4%;background:var(--gold);}
+
+/* ---------- main ---------- */
+.stage{
+  flex:1 1 auto;
+  display:flex;
+  min-height:0;
+}
+
+/* 左列：分组导航 */
+.rail{
+  flex:0 0 var(--rail-w);
+  border-right:var(--line) solid var(--ink);
+  background:var(--paper-2);
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:18px 16px 26px;
+  scrollbar-width:thin;
+}
+.rail-head{
+  font-size:12px;font-weight:700;letter-spacing:.18em;
+  color:var(--ink-soft);
+  margin-bottom:14px;
+}
+.group{margin-bottom:22px;}
+.group:last-child{margin-bottom:0;}
+.ghead{
+  display:flex;align-items:center;gap:9px;
+  padding-bottom:8px;
+  border-bottom:var(--line) solid var(--ink);
+  margin-bottom:10px;
+}
+.ghead .shape{
+  flex:0 0 auto;width:15px;height:15px;background:var(--g);
+}
+.group[data-shape="tri"] .shape{clip-path:polygon(50% 0,100% 100%,0 100%);}
+.group[data-shape="half"] .shape{border-radius:100% 100% 0 0;}
+.ghead h2{
+  font-size:14px;font-weight:900;letter-spacing:.04em;
+}
+.ghead .gn{
+  margin-left:auto;
+  font-size:12px;font-weight:700;
+  color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;
+}
+
+/* 导航项：hover 时色块翻转 + 整块位移（playful） */
+.item{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 11px;
+  margin-bottom:6px;
+  font-size:15px;font-weight:700;
+  border:var(--line) solid transparent;
+  background:transparent;
+  cursor:pointer;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.item .chip{
+  flex:0 0 auto;width:13px;height:13px;
+  background:var(--g);
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),border-radius .22s ease;
+}
+.group[data-shape="tri"] .chip{clip-path:polygon(50% 0,100% 100%,0 100%);}
+.group[data-shape="half"] .chip{border-radius:100% 100% 0 0;}
+.item .txt{min-width:0;}
+.item .ext{
+  margin-left:auto;flex:0 0 auto;
+  font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--ink-soft);
+  opacity:0;transition:opacity .16s ease;
+  font-variant-numeric:tabular-nums;
+}
+.item:hover,.item:focus-visible{
+  background:var(--paper);
+  border-color:var(--ink);
+  transform:translate(-4px,-2px);
+  box-shadow:5px 5px 0 var(--g);
+}
+.item:hover .chip{transform:rotate(135deg) scale(1.15);}
+.item:hover .ext{opacity:1;}
+.item[aria-current="true"]{
+  background:var(--ink);
+  color:var(--paper);
+  border-color:var(--ink);
+  transform:translate(-4px,-2px);
+  box-shadow:5px 5px 0 var(--g);
+}
+.item[aria-current="true"] .chip{
+  transform:rotate(45deg);border-radius:0;background:var(--g);
+}
+.item[aria-current="true"] .ext{opacity:1;color:var(--paper);}
+
+.rail-foot{
+  margin-top:22px;padding-top:14px;
+  border-top:2px dashed rgba(20,18,16,.35);
+  font-size:12px;line-height:1.6;color:var(--ink-soft);
+}
+
+/* 右列：内容区 */
+.viewer{
+  flex:1 1 auto;
+  display:flex;flex-direction:column;
+  min-width:0;min-height:0;
+  background:var(--paper);
+}
+.toolbar{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:14px;
+  padding:11px 18px;
+  border-bottom:var(--line) solid var(--ink);
+  background:var(--paper);
+  position:relative;
+}
+.dots{display:flex;gap:6px;flex:0 0 auto;}
+.dots i{width:11px;height:11px;background:var(--ink);display:block;}
+.dots i:nth-child(1){background:var(--red);border-radius:50%;}
+.dots i:nth-child(2){background:var(--gold);clip-path:polygon(50% 0,100% 100%,0 100%);}
+.dots i:nth-child(3){background:var(--teal);}
+.now{
+  font-size:15px;font-weight:900;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.now .idle{color:var(--ink-soft);font-weight:700;}
+.now .path{
+  font-size:12px;font-weight:700;color:var(--ink-soft);
+  margin-left:8px;
+}
+.pop{
+  margin-left:auto;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 12px;
+  font-size:13px;font-weight:700;
+  border:var(--line) solid var(--ink);
+  background:var(--paper);
+  transition:background .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.pop svg{width:13px;height:13px;display:block;}
+.pop:hover{background:var(--teal);color:var(--paper);transform:translate(-3px,-2px);box-shadow:4px 4px 0 var(--ink);}
+.pop[aria-disabled="true"]{opacity:.4;pointer-events:none;}
+
+.bar{
+  position:absolute;left:0;bottom:calc(-1 * var(--line));
+  height:var(--line);width:0;background:var(--red);
+  transition:width .2s linear,opacity .3s ease;
+  opacity:0;
+}
+.bar.on{width:88%;opacity:1;transition:width 1.4s cubic-bezier(.15,.9,.2,1);}
+
+.frame{position:relative;flex:1 1 auto;min-height:0;background:var(--paper-2);}
+.frame iframe{
+  display:block;width:100%;height:100%;border:0;background:#fff;
+}
+
+/* 欢迎浮层：整块由几何形拼成 */
+.welcome{
+  position:absolute;inset:0;
+  background:var(--paper);
+  display:flex;align-items:center;justify-content:center;
+  gap:46px;
+  padding:32px 40px;
+  overflow:hidden;
+}
+.welcome[hidden]{display:none;}
+.art{
+  position:relative;flex:0 0 auto;
+  width:230px;height:230px;
+  border:var(--line) solid var(--ink);
+  background:var(--paper);
+}
+.art i{position:absolute;display:block;}
+.a1{left:0;top:0;width:50%;height:50%;background:var(--gold);}
+.a2{left:50%;top:0;width:50%;height:50%;background:var(--ink);
+    border-radius:0 0 0 100%;}
+.a3{left:0;top:50%;width:50%;height:50%;background:var(--teal);border-radius:0 100% 0 0;}
+.a4{left:50%;top:50%;width:50%;height:50%;background:var(--red);}
+.a5{left:36%;top:36%;width:28%;height:28%;background:var(--paper);border-radius:50%;
+    border:var(--line) solid var(--ink);}
+.art::after{
+  content:"";position:absolute;left:-1px;top:50%;width:100%;height:var(--line);
+  background:var(--ink);
+}
+.wtext{max-width:34ch;}
+.wtext h2{font-size:30px;font-weight:900;line-height:1.25;letter-spacing:-.01em;}
+.wtext h2 mark{background:var(--gold);color:var(--ink);padding:0 4px;}
+.wtext p{margin-top:14px;font-size:15px;color:var(--ink-soft);line-height:1.7;}
+.wtext .keys{
+  margin-top:18px;display:flex;flex-wrap:wrap;gap:8px;
+}
+.wtext .keys b{
+  font-size:12px;font-weight:700;letter-spacing:.06em;
+  padding:5px 10px;border:2px solid var(--ink);background:var(--paper);
+}
+.wtext .keys b:nth-child(1){background:var(--red);color:#fff;border-color:var(--ink);}
+.wtext .keys b:nth-child(2){background:var(--teal);color:#fff;}
+.wtext .keys b:nth-child(3){background:var(--gold);}
+
+/* ---------- footer ---------- */
+.foot{
+  flex:0 0 auto;
+  border-top:var(--line) solid var(--ink);
+  background:var(--paper);
+}
+.foot-in{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:11px 24px;
+  font-size:12px;color:var(--ink-soft);line-height:1.6;
+}
+.foot-in strong{font-size:12px;font-weight:900;color:var(--ink);letter-spacing:.04em;}
+.foot-in .tech{max-width:62ch;}
+.foot-in .egg{margin-left:auto;color:var(--ink);font-weight:700;}
+.strip{display:flex;height:10px;}
+.strip i{flex:1 1 0;height:100%;}
+.strip i:nth-child(4n+1){background:var(--d1);}
+.strip i:nth-child(4n+2){background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%);}
+.strip i:nth-child(4n+3){background:var(--d3);border-radius:0 0 100% 100%;}
+.strip i:nth-child(4n+4){background:var(--d2);}
+
+/* ============ 断点 1：平板（≤1200px）几何标重组为 2×2 拼块，装饰调色轮换一次 ============ */
+@media (max-width:1200px){
+  :root{--rail-w:270px;--d1:var(--teal);--d2:var(--red);--d3:var(--gold);}
+  .mark{width:84px;height:84px;}
+  .m1{left:0;top:0;width:48%;height:48%;}
+  .m2{left:52%;top:0;width:48%;height:48%;clip-path:polygon(0 100%,100% 0,100% 100%);}
+  .m3{left:0;top:52%;width:48%;height:48%;border-radius:50%;}
+  .m4{left:52%;top:52%;width:48%;height:48%;border-radius:50% 0 50% 0;}
+  .m5{display:none;}
+  .brand-txt strong{font-size:25px;}
+  .welcome{gap:32px;}
+  .art{width:190px;height:190px;}
+  .wtext h2{font-size:26px;}
+}
+
+/* ============ 断点 2：≤820px 堆叠为上导航 + 下内容；几何标重组为同心靶环 ============ */
+@media (max-width:820px){
+  :root{--d1:var(--gold);--d2:var(--teal);--d3:var(--red);}
+  body{overflow:auto;}
+  .masthead-in{padding:12px 16px 10px;gap:14px;flex-wrap:wrap;}
+  .mark{width:56px;height:56px;}
+  .m1{left:0;top:0;width:100%;height:100%;border-radius:50%;background:var(--ink);}
+  .m2{left:50%;top:0;width:50%;height:50%;clip-path:none;border-radius:0 100% 0 0;background:var(--d2);}
+  .m3{left:0;top:50%;width:50%;height:50%;border-radius:0 0 0 100%;background:var(--d3);}
+  .m4{left:50%;top:50%;width:50%;height:50%;border-radius:0 0 100% 0;background:var(--d1);}
+  .m5{display:block;left:32%;top:32%;width:36%;height:36%;
+      background:var(--paper);border-radius:50%;}
+  .brand-txt strong{font-size:22px;}
+  .brand-txt em{font-size:12px;}
+  .count b{font-size:26px;padding:6px 9px 4px;}
+
+  .stage{flex-direction:column;}
+  /* 导航转为顶部横向滚动条 */
+  .rail{
+    flex:0 0 auto;
+    width:100%;
+    border-right:0;
+    border-bottom:var(--line) solid var(--ink);
+    display:flex;flex-direction:row;align-items:stretch;gap:0;
+    overflow-x:auto;overflow-y:hidden;
+    padding:10px 12px 12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .rail-head,.rail-foot{display:none;}
+  .group{
+    display:flex;align-items:center;gap:8px;
+    margin:0;padding-right:12px;margin-right:12px;
+    border-right:2px solid rgba(20,18,16,.3);
+  }
+  .group:last-child{border-right:0;margin-right:0;padding-right:0;}
+  .ghead{
+    flex:0 0 auto;flex-direction:column;align-items:flex-start;gap:3px;
+    border-bottom:0;padding:0;margin:0;
+    border-left:var(--line) solid var(--g);padding-left:8px;
+  }
+  .ghead h2{font-size:12px;white-space:nowrap;}
+  .ghead .gn{margin-left:0;font-size:11px;}
+  .ghead .shape{width:11px;height:11px;}
+  .group ul{display:flex;gap:7px;}
+  .item{
+    margin:0;white-space:nowrap;
+    border-color:var(--ink);background:var(--paper);
+    font-size:14px;padding:8px 10px;
+  }
+  .item .ext{display:none;}
+  .item:hover,.item:focus-visible,.item[aria-current="true"]{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--g);}
+
+  .viewer{min-height:66vh;}
+  .frame{min-height:66vh;}
+  .toolbar{padding:9px 12px;gap:10px;}
+  .now{font-size:14px;}
+  .now .path{display:none;}
+  .pop{padding:6px 9px;font-size:12px;}
+
+  .welcome{flex-direction:column;gap:24px;padding:26px 20px;text-align:center;}
+  .art{width:150px;height:150px;}
+  .wtext h2{font-size:22px;}
+  .wtext p{font-size:14px;}
+  .wtext .keys{justify-content:center;}
+  .foot-in{padding:10px 16px;gap:10px;}
+  .foot-in .egg{margin-left:0;}
+}
+
+@media (max-width:520px){
+  .count{margin-left:0;}
+  .art{width:118px;height:118px;}
+  .welcome{gap:18px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-in">
+    <span class="mark" aria-hidden="true">
+      <i class="m1"></i><i class="m2"></i><i class="m3"></i><i class="m4"></i><i class="m5"></i>
+    </span>
+    <span class="brand-txt">
+      <strong>featon<span>0526</span></strong>
+      <em>交互作品集 · 几何即插画</em>
+    </span>
+    <p class="count"><b>13</b><span>件作品<br>3 个方向</span></p>
+  </div>
+  <div class="ratio" aria-hidden="true"><i></i><i></i><i></i></div>
+</header>
+
+<main class="stage">
+
+  <nav class="rail" aria-label="作品导航">
+    <p class="rail-head">左边挑一件 → 右边就地看</p>
+
+    <section class="group" data-shape="tri" style="--g:var(--red)">
+      <div class="ghead">
+        <i class="shape" aria-hidden="true"></i>
+        <h2>3D 与空间交互</h2>
+        <span class="gn">4</span>
+      </div>
+      <ul>
+        <li><a class="item" href="3d.html" data-id="3d"><i class="chip" aria-hidden="true"></i><span class="txt">3D 粒子手势高阶交互系统</span><span class="ext">01</span></a></li>
+        <li><a class="item" href="3d_1.html" data-id="3d_1"><i class="chip" aria-hidden="true"></i><span class="txt">WebCamera 3D 粒子交互系统</span><span class="ext">02</span></a></li>
+        <li><a class="item" href="3d_fig.html" data-id="3d_fig"><i class="chip" aria-hidden="true"></i><span class="txt">AI 手势识别与粒子控制</span><span class="ext">03</span></a></li>
+        <li><a class="item" href="3d_menu.html" data-id="3d_menu"><i class="chip" aria-hidden="true"></i><span class="txt">未来全息点餐系统</span><span class="ext">04</span></a></li>
+      </ul>
+    </section>
+
+    <section class="group" data-shape="sq" style="--g:var(--teal)">
+      <div class="ghead">
+        <i class="shape" aria-hidden="true"></i>
+        <h2>数据可视化</h2>
+        <span class="gn">7</span>
+      </div>
+      <ul>
+        <li><a class="item" href="red.html" data-id="red"><i class="chip" aria-hidden="true"></i><span class="txt">红楼梦人物关系图</span><span class="ext">05</span></a></li>
+        <li><a class="item" href="MUC.html" data-id="MUC"><i class="chip" aria-hidden="true"></i><span class="txt">漫威电影宇宙角色网络</span><span class="ext">06</span></a></li>
+        <li><a class="item" href="TMDB-movie.html" data-id="TMDB-movie"><i class="chip" aria-hidden="true"></i><span class="txt">星球大战角色数据获取工具</span><span class="ext">07</span></a></li>
+        <li><a class="item" href="wordcloud.html" data-id="wordcloud"><i class="chip" aria-hidden="true"></i><span class="txt">《流浪地球》词云图</span><span class="ext">08</span></a></li>
+        <li><a class="item" href="wuhan.html" data-id="wuhan"><i class="chip" aria-hidden="true"></i><span class="txt">武汉大学品牌声誉深度分析报告</span><span class="ext">09</span></a></li>
+        <li><a class="item" href="echarts.html" data-id="echarts"><i class="chip" aria-hidden="true"></i><span class="txt">ECharts 中国地图可视化</span><span class="ext">10</span></a></li>
+        <li><a class="item" href="news.html" data-id="news"><i class="chip" aria-hidden="true"></i><span class="txt">聚合新闻 · 实时热点资讯</span><span class="ext">11</span></a></li>
+      </ul>
+    </section>
+
+    <section class="group" data-shape="half" style="--g:var(--gold)">
+      <div class="ghead">
+        <i class="shape" aria-hidden="true"></i>
+        <h2>声音与音乐</h2>
+        <span class="gn">2</span>
+      </div>
+      <ul>
+        <li><a class="item" href="birdsound.html" data-id="birdsound"><i class="chip" aria-hidden="true"></i><span class="txt">鸟语解码器</span><span class="ext">12</span></a></li>
+        <li><a class="item" href="city_music_pulse.html" data-id="city_music_pulse"><i class="chip" aria-hidden="true"></i><span class="txt">城市音乐脉搏</span><span class="ext">13</span></a></li>
+      </ul>
+    </section>
+
+    <p class="rail-foot">作品在右侧内嵌运行。若某件作品需要摄像头或麦克风权限，建议点右上角「新窗口打开」后再授权。</p>
+  </nav>
+
+  <section class="viewer" aria-label="作品预览区">
+    <div class="toolbar">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="now" id="now"><span class="idle">尚未选择作品</span></span>
+      <a class="pop" id="pop" href="#" target="_blank" rel="noopener" aria-disabled="true">
+        新窗口打开
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+          <path d="M4 12L12 4"/><path d="M6 4h6v6"/>
+        </svg>
+      </a>
+      <span class="bar" id="bar" aria-hidden="true"></span>
+    </div>
+
+    <div class="frame">
+      <iframe id="view" title="作品预览" allow="camera; microphone; autoplay; fullscreen"></iframe>
+
+      <div class="welcome" id="welcome">
+        <div class="art" aria-hidden="true">
+          <i class="a1"></i><i class="a2"></i><i class="a3"></i><i class="a4"></i><i class="a5"></i>
+        </div>
+        <div class="wtext">
+          <h2>这里是 13 件<mark>能动手玩</mark>的交互作品。</h2>
+          <p>从左边（手机上是上方）挑一个名字，作品会直接在这块区域里跑起来；地址栏会记住你正在看哪一件，刷新也不会丢。</p>
+          <div class="keys">
+            <b>3D 与空间交互</b><b>数据可视化</b><b>声音与音乐</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <strong>© 2026 featon0526</strong>
+    <span class="tech">纯 HTML / CSS / JavaScript 单文件构建，无框架、无外部素材；页面里所有图形（标志、色块、图标）都由 CSS 几何形与内联 SVG 绘制。</span>
+    <span class="egg">彩蛋：拖动窗口宽度，左上角的几何标会重组成三种形状。</span>
+  </div>
+  <div class="strip" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var items   = Array.prototype.slice.call(document.querySelectorAll(".item"));
+  var view    = document.getElementById("view");
+  var now     = document.getElementById("now");
+  var pop     = document.getElementById("pop");
+  var welcome = document.getElementById("welcome");
+  var bar     = document.getElementById("bar");
+  var current = "";
+
+  var byId = {};
+  items.forEach(function(a){ byId[a.dataset.id] = a; });
+
+  function label(a){
+    return a.querySelector(".txt").textContent.trim();
+  }
+
+  function activate(id){
+    var a = byId[id];
+    if(!a){ return false; }
+
+    var file = a.getAttribute("href");
+    var name = label(a);
+
+    if(current !== id){
+      bar.classList.add("on");
+      view.setAttribute("src", file);
+    }
+    current = id;
+
+    items.forEach(function(x){
+      if(x === a){ x.setAttribute("aria-current","true"); }
+      else { x.removeAttribute("aria-current"); }
+    });
+
+    now.innerHTML = "";
+    var t = document.createElement("span");
+    t.textContent = name;
+    var p = document.createElement("span");
+    p.className = "path";
+    p.textContent = file;
+    now.appendChild(t);
+    now.appendChild(p);
+
+    pop.setAttribute("href", file);
+    pop.setAttribute("aria-disabled","false");
+    welcome.hidden = true;
+    document.title = name + " · featon0526 交互作品集";
+
+    // 移动端横向导航：把当前项滚进可视范围
+    if(a.scrollIntoView){
+      try{ a.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"}); }
+      catch(e){ a.scrollIntoView(false); }
+    }
+    return true;
+  }
+
+  view.addEventListener("load", function(){
+    bar.classList.remove("on");
+  });
+
+  items.forEach(function(a){
+    a.addEventListener("click", function(e){
+      if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0){ return; }
+      e.preventDefault();
+      var id = a.dataset.id;
+      if(location.hash.slice(1) === id){ activate(id); }
+      else { location.hash = id; }               // 交给 hashchange 统一处理
+    });
+  });
+
+  function fromHash(){
+    var id = "";
+    try{ id = decodeURIComponent(location.hash.slice(1)); }
+    catch(err){ id = location.hash.slice(1); }
+    if(id && byId[id]){ activate(id); }
+  }
+
+  window.addEventListener("hashchange", fromHash);
+  fromHash();   // 深链恢复：刷新后回到上次那件作品
+})();
+</script>
+
+</body>
+</html>

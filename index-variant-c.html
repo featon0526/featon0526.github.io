@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>featon 交互作品集 · 白</title>
+
+<!-- 仅引用 Google Fonts（Noto Serif SC 衬线 display / Inter 无衬线正文），无其他外部依赖 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     方向 C · 原研哉「白」哲学
+     暖白底 / 发丝灰分隔 / 墨黑字 / 单点朱红点睛
+     留白是构图（有明确视觉锚点），不为气质牺牲可读性
+     ============================================================ */
+
+  :root{
+    --paper:   #FAFAFA;   /* 暖白底：容纳想象的容器 */
+    --ink:     #0A0A0A;   /* 墨黑字 */
+    --hair:    #EFEFEF;   /* 发丝灰分隔线与裱框 */
+    --muted:   #666666;   /* 次级文字（对比度 ≥ 4.5:1） */
+    --soft:    #555555;   /* 说明文字 */
+    --accent:  #C8442E;   /* 朱红：仅小面积点睛 */
+    --serif:   "Songti SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+    --sans:    -apple-system,BlinkMacSystemFont,"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- header：站标题 + 作品数 ---------- */
+  header{
+    flex-shrink:0;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:30px 44px;
+    border-bottom:1px solid var(--hair);
+  }
+  .site-title{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:27px;
+    letter-spacing:0.10em;
+    margin:0;
+  }
+  .site-title .dot{
+    color:var(--accent);     /* 单点朱红：站名后的呼吸 */
+  }
+  .site-sub{
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:0.16em;
+  }
+
+  /* ---------- main：左右两列 ---------- */
+  main{
+    flex:1;
+    display:flex;
+    min-height:0;            /* 允许内部独立滚动 */
+  }
+
+  /* 左列：带序号的极简索引式分组导航 */
+  .index{
+    width:330px;
+    flex-shrink:0;
+    border-right:1px solid var(--hair);
+    padding:38px 0;
+    overflow-y:auto;
+  }
+  .group{ margin-bottom:42px; padding:0 44px; }
+  .group:last-child{ margin-bottom:8px; }
+  .group-title{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:14px;
+    color:#333333;
+    letter-spacing:0.22em;
+    margin:0 0 20px;
+  }
+  .group-title .count{
+    font-family:var(--sans);
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+    margin-left:8px;
+  }
+
+  .index-list{ list-style:none; margin:0; padding:0; }
+  .index-item{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    padding:10px 0;
+    cursor:pointer;
+    user-select:none;
+  }
+  .index-mark{
+    width:6px; height:6px;
+    flex-shrink:0;
+    margin-top:7px;
+    background:transparent;   /* 未选中：空，留白 */
+    transition:background .25s ease;
+  }
+  .index-num{
+    font-family:var(--serif);
+    font-size:12px;
+    color:var(--muted);
+    width:24px;
+    flex-shrink:0;
+    letter-spacing:0.04em;
+  }
+  .index-name{
+    font-size:14px;           /* 正文底线 ≥14px */
+    color:var(--ink);
+    line-height:1.45;
+  }
+  .index-item:hover .index-name{
+    text-decoration:underline;
+    text-underline-offset:4px;
+    text-decoration-thickness:1px;
+    text-decoration-color:var(--hair);
+  }
+  /* 当前项：单点朱红点睛 */
+  .index-item.active .index-mark{ background:var(--accent); }
+  .index-item.active .index-num{ color:var(--accent); font-weight:600; }
+  .index-item.active .index-name{ color:var(--ink); }
+
+  /* 右列：内容区（工具条 + 裱框 iframe + caption） */
+  .stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    padding:38px 44px;
+  }
+  .stage-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:20px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--hair);
+    margin-bottom:26px;
+  }
+  .current-name{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:21px;
+    letter-spacing:0.04em;
+    color:var(--ink);
+  }
+  .open-new{
+    flex-shrink:0;
+    font-size:13px;
+    color:var(--muted);
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    letter-spacing:0.04em;
+    transition:color .2s ease;
+  }
+  .open-new:hover{ color:var(--ink); }
+  .open-new svg{ display:block; }
+
+  /* iframe 用发丝灰边框裱框，像一幅装裱的作品 */
+  .frame{
+    flex:1;
+    min-height:380px;
+    width:100%;
+    border:1px solid var(--hair);
+    background:#FFFFFF;
+    display:block;
+  }
+  .caption{
+    font-size:14px;           /* 说明文字 ≥14px */
+    color:var(--soft);
+    margin:20px 0 0;
+    line-height:1.7;
+    letter-spacing:0.02em;
+  }
+
+  /* ---------- footer：版权 + 技术说明 ---------- */
+  footer{
+    flex-shrink:0;
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    padding:20px 44px;
+    border-top:1px solid var(--hair);
+    font-size:12px;           /* 注释底线 ≥12px */
+    color:var(--muted);
+    letter-spacing:0.05em;
+    line-height:1.6;
+  }
+
+  /* ---------- 首次进入的欢迎浮层（暖白、克制） ---------- */
+  .welcome{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    background:var(--paper);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:opacity .7s ease;
+    padding:24px;
+    text-align:center;
+  }
+  .welcome.hidden{
+    opacity:0;
+    pointer-events:none;
+  }
+  .welcome-mark{
+    font-family:var(--serif);
+    font-weight:300;
+    font-size:128px;
+    line-height:1;
+    color:#ECECEC;            /* 极淡的「白」：母题，非装饰图 */
+    user-select:none;
+  }
+  .welcome-title{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:23px;
+    letter-spacing:0.24em;
+    margin:14px 0 0;
+  }
+  .welcome-desc{
+    font-size:14px;
+    color:var(--muted);
+    max-width:440px;
+    margin:22px auto 0;
+    line-height:2;
+    letter-spacing:0.03em;
+  }
+  .welcome-hint{
+    font-size:12px;
+    color:#B0B0B0;
+    letter-spacing:0.18em;
+    margin-top:40px;
+  }
+
+  /* ---------- 移动端：≤820px 堆叠为上下 ---------- */
+  @media (max-width:820px){
+    header{ padding:22px; }
+    .site-title{ font-size:22px; }
+    .site-sub{ font-size:12px; }
+
+    main{ flex-direction:column; }
+
+    /* 导航变顶部，竖向滚动 */
+    .index{
+      width:auto;
+      border-right:none;
+      border-bottom:1px solid var(--hair);
+      padding:24px 0;
+      max-height:40vh;
+      overflow-y:auto;
+    }
+    .group{ padding:0 22px; margin-bottom:28px; }
+    .group:last-child{ margin-bottom:4px; }
+    .index-item{ padding:8px 0; }
+
+    .stage{ padding:24px 22px; }
+    .frame{ min-height:340px; }
+    .current-name{ font-size:18px; }
+
+    footer{ flex-direction:column; gap:6px; padding:18px 22px; }
+
+    .welcome-mark{ font-size:88px; }
+    .welcome-desc{ font-size:13px; }
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- header：站标题 + 作品数 -->
+  <header>
+    <h1 class="site-title">featon 交互作品集<span class="dot">.</span></h1>
+    <div class="site-sub">十三件作品 · 二〇二四</div>
+  </header>
+
+  <!-- main：左索引导航 + 右内容区 -->
+  <main>
+
+    <!-- 左列：带序号的极简索引式分组导航（由脚本生成） -->
+    <nav class="index" id="index" aria-label="作品索引"></nav>
+
+    <!-- 右列：内容区 -->
+    <section class="stage">
+      <div class="stage-bar">
+        <span class="current-name" id="currentName">尚未选择作品</span>
+        <a class="open-new" id="openNew" href="#" target="_blank" rel="noopener">
+          <span>新窗口打开</span>
+          <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M3 9 L9 3 M9 3 H4.5 M9 3 V7.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- 裱框 iframe：点击左侧索引时载入对应页面 -->
+      <iframe class="frame" id="frame" title="作品预览" src="about:blank"></iframe>
+
+      <p class="caption" id="caption">从左侧的索引里，挑一件作品开始。</p>
+    </section>
+
+  </main>
+
+  <!-- footer：版权 + 技术说明 -->
+  <footer>
+    <span>© 2024 featon0526 · 交互作品集</span>
+    <span>技术说明：单文件 HTML · 无外部依赖（仅 Google Fonts）· 点击左侧索引在右侧裱框中预览</span>
+  </footer>
+
+  <!-- 首次进入的欢迎浮层 -->
+  <div class="welcome" id="welcome">
+    <div class="welcome-mark">白</div>
+    <div class="welcome-title">白，是容纳想象的容器</div>
+    <p class="welcome-desc">这里收着十三件交互作品，分作三组。<br>左侧是极简的索引，右侧是一方留白的裱框。<br>点一件，它便在框里苏醒。</p>
+    <div class="welcome-hint">点击任意处进入</div>
+  </div>
+
+<script>
+  /* ============================================================
+     作品数据：三版必须完全一致（13 件，相对文件名，与主页同级）
+     分组：threeD（3D 与空间交互）/ data（数据可视化）/ sound（声音与音乐）
+     ============================================================ */
+  const works = [
+    // —— 3D 与空间交互（4）——
+    { id:'3d',     file:'3d.html',            group:'threeD', name:'3D 粒子手势高阶交互系统', caption:'用手势在三维空间里，牵引一片光的粒子。' },
+    { id:'3d_1',   file:'3d_1.html',          group:'threeD', name:'WebCamera 3D 粒子交互系统', caption:'无需手柄，摄像头前你的身体即是控制器。' },
+    { id:'3d_fig', file:'3d_fig.html',        group:'threeD', name:'AI 手势识别与粒子控制',   caption:'模型读懂手势，粒子随之呼吸与聚散。' },
+    { id:'3d_menu',file:'3d_menu.html',       group:'threeD', name:'未来全息点餐系统',       caption:'在半空中，点选一顿饭的幻象。' },
+
+    // —— 数据可视化（7）——
+    { id:'red',     file:'red.html',          group:'data', name:'红楼梦人物关系图',       caption:'把红楼众人的情缘，织成一张网。' },
+    { id:'MUC',     file:'MUC.html',          group:'data', name:'漫威电影宇宙角色网络',   caption:'超级英雄之间的引力与羁绊。' },
+    { id:'TMDB',    file:'TMDB-movie.html',   group:'data', name:'星球大战角色数据获取工具', caption:'从数据库里，打捞星战角色的档案。' },
+    { id:'wordcloud',file:'wordcloud.html',    group:'data', name:'《流浪地球》词云图',     caption:'让台词里的高频词，落一场雪。' },
+    { id:'wuhan',   file:'wuhan.html',        group:'data', name:'武汉大学品牌声誉深度分析报告', caption:'为百年学府，量一次声誉的体温。' },
+    { id:'echarts', file:'echarts.html',      group:'data', name:'ECharts 中国地图可视化', caption:'在地图上，点亮数据的经纬。' },
+    { id:'news',    file:'news.html',         group:'data', name:'聚合新闻 · 实时热点资讯', caption:'把喧嚣的当下，收进一屏。' },
+
+    // —— 声音与音乐（2）——
+    { id:'birdsound',file:'birdsound.html',        group:'sound', name:'鸟语解码器',       caption:'听懂林间，每一声短促的密语。' },
+    { id:'citypulse',file:'city_music_pulse.html', group:'sound', name:'城市音乐脉搏',     caption:'城市的呼吸，藏在它的节拍里。' }
+  ];
+
+  const groupMeta = {
+    threeD:{ label:'3D 与空间交互', order:0 },
+    data:  { label:'数据可视化',   order:1 },
+    sound: { label:'声音与音乐',   order:2 }
+  };
+
+  const workMap = {};
+  works.forEach((w,i)=>{ w.no = String(i+1).padStart(2,'0'); workMap[w.id] = w; });
+
+  /* ---------- 生成左侧索引 ---------- */
+  const indexEl = document.getElementById('index');
+
+  // 按 groupMeta 顺序输出分组
+  Object.keys(groupMeta)
+    .sort((a,b)=> groupMeta[a].order - groupMeta[b].order)
+    .forEach(gKey=>{
+      const meta = groupMeta[gKey];
+      const items = works.filter(w=> w.group === gKey);
+
+      const group = document.createElement('div');
+      group.className = 'group';
+
+      const title = document.createElement('div');
+      title.className = 'group-title';
+      title.innerHTML = meta.label + '<span class="count">'+ items.length +'</span>';
+      group.appendChild(title);
+
+      const list = document.createElement('ul');
+      list.className = 'index-list';
+
+      items.forEach(w=>{
+        const li = document.createElement('li');
+        li.className = 'index-item';
+        li.dataset.id = w.id;
+        li.innerHTML =
+          '<span class="index-mark"></span>' +
+          '<span class="index-num">'+ w.no +'</span>' +
+          '<span class="index-name">'+ w.name +'</span>';
+        li.addEventListener('click', ()=> selectWork(w.id, false));
+        list.appendChild(li);
+      });
+
+      group.appendChild(list);
+      indexEl.appendChild(group);
+    });
+
+  /* ---------- 内容区元素 ---------- */
+  const frame      = document.getElementById('frame');
+  const currentName= document.getElementById('currentName');
+  const caption    = document.getElementById('caption');
+  const openNew    = document.getElementById('openNew');
+  const welcome    = document.getElementById('welcome');
+
+  let currentId = null;
+
+  /* ---------- 选中一件作品 ---------- */
+  function selectWork(id, fromHash){
+    const w = workMap[id];
+    if(!w) return;
+
+    currentId = id;
+
+    // 右侧裱框载入对应页面
+    frame.src = w.file;
+    currentName.textContent = w.name;
+    openNew.href = w.file;
+    caption.textContent = '「'+ w.name +'」' + w.caption;
+
+    // 高亮当前导航项（单点朱红）
+    document.querySelectorAll('.index-item').forEach(el=>{
+      el.classList.toggle('active', el.dataset.id === id);
+    });
+
+    // 隐藏欢迎浮层
+    welcome.classList.add('hidden');
+
+    // 深链：写入地址栏 hash（刷新可恢复）
+    if(!fromHash && ('#'+id) !== location.hash){
+      location.hash = id;
+    }
+  }
+
+  /* ---------- hash 深链恢复 ---------- */
+  function applyHash(){
+    const id = location.hash.replace('#','');
+    if(id && workMap[id]){
+      selectWork(id, true);
+    }
+  }
+  window.addEventListener('hashchange', applyHash);
+
+  // 点击欢迎浮层任意处：仅隐藏（不强制选中）
+  welcome.addEventListener('click', ()=> welcome.classList.add('hidden'));
+
+  // 首次进入：若有 hash 则直接恢复，否则显示浮层
+  if(location.hash.replace('#','') && workMap[location.hash.replace('#','')]){
+    applyHash();
+  }
+  // 否则 .welcome 默认可见
+</script>
+</body>
+</html>
