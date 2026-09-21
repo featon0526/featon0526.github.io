@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新媒体交互设计课程作业展示 · 2026</title>
+<meta name="description" content="网络新媒体专业《新媒体交互设计》课程作业展示，汇集同学们的网页作品与交互设计实践。">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root {
+    --bg: #F4F6FB;
+    --bg-2: #E9EDF6;
+    --paper: #FFFFFF;
+    --ink: #0E1A2E;
+    --ink-2: #4C5A75;
+    --ink-3: #7C8AA3;
+    --line: #E2E8F4;
+    --accent: #2F5AFF;
+    --accent-deep: #1E3FCC;
+    --accent-soft: #E9EEFF;
+    --amber: #D97A1F;
+    --amber-soft: #FCF0E2;
+    --green: #128A63;
+    --green-soft: #E2F4ED;
+    --purple: #6D4EE0;
+    --purple-soft: #EEE9FC;
+    --red: #D9534F;
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(14,26,46,.07);
+    --shadow-lg: 0 22px 52px rgba(14,26,46,.14);
+    --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  ::selection { background: var(--accent); color: #fff; }
+
+  /* ===== Header / Nav ===== */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(244, 246, 251, .82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), #7A5AF8);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .brand-year {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid #D7E0FF;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+  .nav-links a { transition: color .18s ease; }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* ===== Hero ===== */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(900px 420px at 82% -10%, rgba(47,90,255,.10), transparent 60%),
+      radial-gradient(700px 380px at 8% 110%, rgba(122,90,248,.08), transparent 60%),
+      var(--bg);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(14,26,46,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(14,26,46,.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.7), transparent 78%);
+    mask-image: linear-gradient(180deg, rgba(0,0,0,.7), transparent 78%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    position: relative;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 84px 24px 76px;
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap: 56px;
+    align-items: center;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid #D7E0FF;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .hero h1 {
+    font-size: clamp(34px, 4.6vw, 54px);
+    font-weight: 900;
+    line-height: 1.16;
+    letter-spacing: .01em;
+  }
+  .hero h1 .hl {
+    color: var(--accent);
+  }
+  .hero-sub {
+    margin-top: 18px;
+    max-width: 520px;
+    font-size: 16.5px;
+    color: var(--ink-2);
+  }
+  .hero-cta {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(47,90,255,.28);
+  }
+  .btn-primary:hover { background: var(--accent-deep); box-shadow: 0 10px 28px rgba(47,90,255,.34); }
+  .btn-ghost {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-stats {
+    margin-top: 44px;
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 26px;
+    max-width: 560px;
+  }
+  .stat {
+    flex: 1;
+    padding-right: 26px;
+  }
+  .stat + .stat { border-left: 1px solid var(--line); padding-left: 26px; }
+  .stat .num {
+    font-family: var(--font-mono);
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .stat .num em { font-style: normal; color: var(--accent); }
+  .stat .label { margin-top: 4px; font-size: 13.5px; color: var(--ink-3); }
+
+  /* Hero browser mock */
+  .hero-browser {
+    position: relative;
+  }
+  .browser {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: floaty 7s ease-in-out infinite;
+  }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line);
+    background: #FBFCFE;
+  }
+  .dots { display: flex; gap: 6px; }
+  .dots i {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: block;
+  }
+  .dots i:nth-child(1) { background: #F56B6B; }
+  .dots i:nth-child(2) { background: #F4B84B; }
+  .dots i:nth-child(3) { background: #4CC08A; }
+  .browser-url {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 4px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .browser-body { padding: 16px; }
+  .mock-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .mock-title {
+    width: 46%;
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--ink) 0%, rgba(14,26,46,.35) 100%);
+  }
+  .mock-chip {
+    width: 22%;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    border: 1px solid #D7E0FF;
+  }
+  .mock-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .mock-tile {
+    aspect-ratio: 1 / .82;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-tile::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 30%;
+    background: rgba(255,255,255,.32);
+    border-radius: 0 0 9px 9px;
+  }
+  .mock-tile:nth-child(1) { --c1: #2F5AFF; --c2: #7A5AF8; }
+  .mock-tile:nth-child(2) { --c1: #F4B84B; --c2: #E8912D; }
+  .mock-tile:nth-child(3) { --c1: #4CC08A; --c2: #12A878; }
+  .mock-tile:nth-child(4) { --c1: #7A5AF8; --c2: #E25563; }
+  .mock-tile:nth-child(5) { --c1: #2F5AFF; --c2: #4CC08A; }
+  .mock-tile:nth-child(6) { --c1: #E8912D; --c2: #E25563; }
+  .hero-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+    background: #0b1526;
+  }
+  .mock-foot {
+    margin-top: 14px;
+    height: 8px;
+    width: 64%;
+    border-radius: 4px;
+    background: var(--bg-2);
+  }
+  .hero-browser .browser-label {
+    margin-top: 16px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: .04em;
+  }
+
+  /* ===== Section base ===== */
+  .section {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 72px 24px;
+  }
+  .section-head {
+    margin-bottom: 34px;
+  }
+  .sec-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .section-head h2 {
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 900;
+    letter-spacing: .01em;
+  }
+  .section-head .desc {
+    margin-top: 10px;
+    color: var(--ink-2);
+    max-width: 640px;
+  }
+
+  /* ===== Works ===== */
+  .works { scroll-margin-top: 84px; }
+  .works-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink-2);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all .16s ease;
+  }
+  .filter:hover { border-color: var(--accent); color: var(--accent); }
+  .filter.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+  .works-count {
+    font-size: 13.5px;
+    color: var(--ink-3);
+  }
+  .works-count strong { color: var(--accent); font-family: var(--font-mono); }
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .search-box input {
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 14px 9px 34px;
+    width: 215px;
+    outline: none;
+    transition: border-color .16s ease, box-shadow .16s ease;
+  }
+  .search-box input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .search-box input::placeholder { color: var(--ink-3); }
+  .search-box input::-webkit-search-cancel-button { cursor: pointer; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 26px;
+  }
+
+  .work-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .work-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: #C9D6F8;
+  }
+  .work-card .browser { box-shadow: none; border-radius: 0; border: none; animation: none; }
+  .work-card .browser-bar { padding: 9px 12px; }
+  .work-card .browser-url { font-size: 10.5px; }
+  .preview {
+    position: relative;
+    aspect-ratio: 16 / 8.2;
+    background: var(--grad);
+    overflow: hidden;
+  }
+  .preview .mark {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 58px;
+    font-weight: 900;
+    color: rgba(255,255,255,.88);
+    text-shadow: 0 2px 14px rgba(0,0,0,.16);
+  }
+  .preview .skel {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: 18%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .preview .skel i {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.5);
+  }
+  .preview .skel i:nth-child(1) { width: 55%; }
+  .preview .skel i:nth-child(2) { width: 78%; }
+  .preview .work-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #0b1526;
+  }
+  .playing-tag {
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(47,90,255,.08);
+    border: 1px solid rgba(47,90,255,.18);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .card-body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .card-tags {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .badge.round-1 { color: var(--accent); background: var(--accent-soft); }
+  .badge.round-2 { color: var(--amber); background: var(--amber-soft); }
+  .badge.round-3 { color: var(--purple); background: var(--purple-soft); }
+  .badge.round-4 { color: var(--green); background: var(--green-soft); }
+  .badge.round-5 { color: var(--purple); background: var(--purple-soft); }
+  .badge.round-5 { color: var(--red); background: #FCEAEA; }
+  .badge.round-6 { color: #B4479A; background: #F9EAF6; }
+  .score {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-2);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .score.hi { color: var(--green); background: var(--green-soft); border-color: #CBE8DD; }
+  .score.mid { color: var(--accent); background: var(--accent-soft); border-color: #D7E0FF; }
+  .score.lo { color: var(--amber); background: var(--amber-soft); border-color: #F2DFC9; }
+
+  .card-body h3 {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .author {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .author .sid {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 1px 8px;
+    border-radius: 6px;
+  }
+  .comment {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  .card-foot {
+    margin-top: 6px;
+    padding-top: 13px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .date {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .demo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent);
+    transition: gap .16s ease, color .16s ease;
+  }
+  .demo-link:hover { color: var(--accent-deep); gap: 10px; }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-3);
+    background: var(--paper);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    font-size: 14.5px;
+  }
+
+  .import-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .btn-import {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid #D7E0FF;
+    border-radius: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all .16s ease;
+  }
+  .btn-import:hover { background: #DDE6FF; border-color: var(--accent); }
+  .source-hint { font-size: 12.5px; color: var(--ink-3); }
+  .source-hint a { color: var(--accent); font-weight: 700; text-decoration: underline; }
+  .no-link { font-size: 12.5px; color: var(--ink-3); }
+
+  /* ===== About ===== */
+  .about {
+    background: var(--ink);
+    color: #E9EDF6;
+    max-width: none;
+    padding: 84px 24px;
+    scroll-margin-top: 60px;
+  }
+  .about-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: 56px;
+    align-items: start;
+  }
+  .about .sec-eyebrow { color: #8FA7FF; }
+  .about h2 { color: #fff; }
+  .about .desc { color: #B9C4D8; margin-top: 14px; font-size: 15.5px; max-width: 560px; }
+  .about .desc p + p { margin-top: 12px; }
+  .about-facts {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 8px 22px;
+  }
+  .fact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    font-size: 14px;
+  }
+  .fact + .fact { border-top: 1px solid rgba(255,255,255,.1); }
+  .fact .k { color: #9AA6BF; }
+  .fact .v {
+    font-weight: 700;
+    color: #fff;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  /* ===== Footer ===== */
+  .site-footer {
+    background: #0A1322;
+    color: #8E9AB5;
+    padding: 44px 24px 40px;
+  }
+  .footer-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .footer-brand {
+    font-weight: 700;
+    color: #fff;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .footer-brand .brand-mark { width: 26px; height: 26px; font-size: 11.5px; }
+  .footer-meta { font-size: 13px; line-height: 1.9; }
+  .footer-links {
+    display: flex;
+    gap: 22px;
+    font-size: 13.5px;
+    align-items: center;
+  }
+  .footer-links a:hover { color: #fff; }
+  .footer-note {
+    margin-top: 26px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 12.5px;
+    color: #67748F;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Focus & motion */
+  a:focus-visible, button:focus-visible {
+    outline: 3px solid rgba(47,90,255,.45);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .browser, .work-card { animation: none; transition: none; }
+    .demo-link, .btn { transition: none; }
+  }
+
+  @media (max-width: 960px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 44px; padding-top: 60px; }
+    .hero-browser { max-width: 460px; }
+    .about-inner { grid-template-columns: 1fr; gap: 34px; }
+    .stat .num { font-size: 28px; }
+  }
+  @media (max-width: 560px) {
+    .nav-links { gap: 16px; font-size: 13.5px; }
+    .hero-inner { padding: 48px 20px 56px; }
+    .hero-stats { flex-wrap: wrap; gap: 18px 0; }
+    .stat { padding-right: 16px; }
+    .stat + .stat { padding-left: 16px; }
+    .grid { grid-template-columns: 1fr; }
+    .section { padding: 56px 20px; }
+    .works-toolbar { flex-direction: column; align-items: flex-start; }
+    .toolbar-right { width: 100%; justify-content: space-between; }
+    .search-box input { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">IXD</span>
+      <span>新媒体交互设计</span>
+      <span class="brand-year">2026</span>
+    </a>
+    <nav class="nav-links" aria-label="页面导航">
+      <a href="#works">作品展示</a>
+      <a href="#about">关于课程</a>
+      <a href="#contact">联系我们</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <span class="eyebrow">课程作业作品展 · NEW MEDIA IXD</span>
+        <h1>新媒体交互设计<br><span class="hl">课程作业展示</span></h1>
+        <p class="hero-sub">这里汇集了同学们在《新媒体交互设计》课程中完成的作品——从个人网页到交互应用，用 HTML、CSS 与 JavaScript 一步步搭建出可运行的创意表达。</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#works">浏览学生作品</a>
+          <a class="btn btn-ghost" href="#about">了解课程</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="num"><em id="stat-total">—</em></div>
+            <div class="label">总作业数</div>
+          </div>
+          <div class="stat">
+            <div class="num"><em id="stat-students">—</em></div>
+            <div class="label">参与学生</div>
+          </div>
+          <div class="stat">
+            <div class="num"><em id="stat-rounds">—</em></div>
+            <div class="label">作业次数</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-browser" aria-hidden="true">
+        <div class="browser">
+          <div class="browser-bar">
+            <span class="dots"><i></i><i></i><i></i></span>
+            <span class="browser-url">works-2026.newmedia.example</span>
+          </div>
+          <div class="browser-body">
+            <div class="mock-head">
+              <span class="mock-title"></span>
+              <span class="mock-chip"></span>
+            </div>
+            <video class="hero-video" src="course_intro.mp4" autoplay muted loop playsinline preload="metadata"></video>
+            <div class="mock-foot"></div>
+          </div>
+        </div>
+        <p class="browser-label">每件作品 · 都是一次可打开的网页</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Works ===== -->
+  <section class="section works" id="works">
+    <div class="section-head">
+      <p class="sec-eyebrow">Works</p>
+      <h2>学生作品展示</h2>
+      <p class="desc">全部作品自动展示，可按作业轮次筛选。</p>
+      <div class="import-row">
+        <button type="button" class="btn-import" id="btn-import-csv" disabled="disabled">导入 CSV 文件</button>
+        <input type="file" id="csv-file" accept=".csv,text/csv" hidden>
+        <span class="source-hint" id="data-source"></span>
+      </div>
+    </div>
+    <div class="works-toolbar">
+      <div class="filters" role="tablist" aria-label="按作业次数筛选">
+        <button class="filter active" data-filter="all" role="tab" aria-selected="true">全部</button>
+        <button class="filter" data-filter="1" role="tab" aria-selected="false">第1次作业</button>
+        <button class="filter" data-filter="2" role="tab" aria-selected="false">第2次作业</button>
+        <button class="filter" data-filter="3" role="tab" aria-selected="false">第3次作业</button>
+        <button class="filter" data-filter="4" role="tab" aria-selected="false">第4次作业</button>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-box">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="search" id="search-input" placeholder="输入学号或姓名查询" autocomplete="off" aria-label="按学号或姓名查询">
+        </div>
+        <p class="works-count">共 <strong id="public-count">—</strong> 件作品</p>
+      </div>
+    </div>
+    <div class="grid" id="works-grid"></div>
+  </section>
+
+  <!-- ===== About ===== -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <div>
+        <p class="sec-eyebrow">About</p>
+        <h2>关于这门课程</h2>
+        <div class="desc">
+          <p>《新媒体交互设计》聚焦于以网页为载体的交互表达：学生从零开始完成个人主页、信息展示页、工具型网页与数据可视化页面等实践项目，在一次次迭代中理解布局、配色、动效与可用性。</p>
+          <p>本页面数据来源于课程维护的飞书多维表格「2026_media_ixd」导出的 CSV 文件；将最新导出的 CSV 放到页面同目录（或直接点击「导入 CSV」）即可更新展示。</p>
+        </div>
+      </div>
+      <div class="about-facts">
+        <div class="fact"><span class="k">课程名称</span><span class="v">新媒体交互设计</span></div>
+        <div class="fact"><span class="k">数据来源</span><span class="v">2026_media_ixd</span></div>
+        <div class="fact"><span class="k">收录作业</span><span class="v" id="fact-total">—</span></div>
+        <div class="fact"><span class="k">参与学生</span><span class="v" id="fact-students">—</span></div>
+        <div class="fact"><span class="k">作业轮次</span><span class="v" id="fact-rounds">—</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" id="contact">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-brand"><span class="brand-mark">IXD</span>新媒体交互设计 · 2026</p>
+      <p class="footer-meta">网络新媒体专业课程作业展示<br>作品链接由同学们在课程中提交</p>
+    </div>
+    <nav class="footer-links" aria-label="页脚导航">
+      <a href="#works">作品展示</a>
+      <a href="#about">关于课程</a>
+      <a href="#top">返回顶部</a>
+    </nav>
+  </div>
+  <div class="footer-note">
+    <span>数据来源：飞书多维表格 2026_media_ixd（CSV 导出）</span>
+    <span>© 2026 新媒体交互设计课程</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===== 数据源：本地 CSV 文件（由飞书多维表格 2026_media_ixd 导出） ===== */
+  var CSV_FILENAME = "projects_2026_media_ixd_Grid.csv";
+
+  /* ===== 数据源：飞书多维表格 2026_media_ixd（grid 表） ===== */
+  var WORKS = [
+    { id: "202401001", name: "李明", title: "个人主页设计", round: "1", date: "2026/9/20", url: "" },
+    { id: "202401002", name: "王佳", title: "班级活动展示网站", round: "2", date: "2026/9/20", url: "" },
+    { id: "202401003", name: "张伟", title: "个人简历网页", round: "1", date: "2026/9/20", url: "" },
+    { id: "202401004", name: "刘畅", title: "校园风景摄影集网站", round: "3", date: "2026/9/20", url: "" },
+    { id: "202401005", name: "陈雨", title: "在线图书借阅系统原型", round: "2", date: "2026/9/20", url: "" },
+    { id: "202401006", name: "赵阳", title: "动漫主题个人主页", round: "1", date: "2026/9/20", url: "" },
+    { id: "202401007", name: "黄晓", title: "班级成绩查询网页", round: "3", date: "2026/9/20", url: "" },
+    { id: "202401008", name: "周杰", title: "宠物展示网站", round: "2", date: "2026/9/20", url: "" },
+    { id: "202401009", name: "吴桐", title: "旅行游记分享网页", round: "1", date: "2026/9/20", url: "" },
+    { id: "202401010", name: "郑雪", title: "课程作业提交系统演示页", round: "3", date: "2026/9/20", url: "" },
+    { id: "20161060001", name: "张书宁", title: "视频作业", round: "4", date: "2026/9/20", url: "http://www.nwu.edu.cn/" },
+    { id: "20161060002", name: "张书", title: "视频作业", round: "5", date: "2026/9/20", url: "http://www.nwu.edu.cn/" }
+  ];
+
+  var GRADIENTS = [
+    "linear-gradient(135deg, #2F5AFF 0%, #7A5AF8 100%)",
+    "linear-gradient(135deg, #0FB5A6 0%, #2F5AFF 100%)",
+    "linear-gradient(135deg, #F4B84B 0%, #E25563 100%)",
+    "linear-gradient(135deg, #6D4EE0 0%, #2F5AFF 100%)",
+    "linear-gradient(135deg, #E25563 0%, #D97A1F 100%)",
+    "linear-gradient(135deg, #12A878 0%, #0FB5A6 100%)"
+  ];
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function cleanUrl(u) {
+    if (!u) return "#";
+    var m = String(u).match(/https?:\/\/[^\s)]+/i);
+    return m ? m[0] : String(u);
+  }
+
+  function shortUrl(u) {
+    var c = cleanUrl(u);
+    return c.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  }
+
+  function formatScore(s) {
+    if (s == null) return "未评分";
+    var n = Number(s);
+    return (Math.round(n * 10) / 10).toString();
+  }
+
+  function scoreClass(s) {
+    if (s == null) return "lo";
+    if (s >= 90) return "hi";
+    if (s >= 80) return "mid";
+    return "lo";
+  }
+
+  function isVideoUrl(u) {
+    return /\.(mp4|webm|mov|ogg|ogv|m4v|m3u8)(\?|#|$)/i.test(String(u));
+  }
+
+  function cardHtml(w, idx) {
+    var url = cleanUrl(w.url);
+    var hasUrl = url && url !== "#";
+    var isVideo = hasUrl && isVideoUrl(url);
+    var grad = GRADIENTS[idx % GRADIENTS.length];
+    var mark = w.title ? String(w.title).charAt(0) : "作";
+    var previewInner = isVideo
+      ? '<video class="work-video" controls preload="metadata" src="' + esc(url) + '"></video>'
+      : '<span class="mark">' + esc(mark) + '</span><span class="skel"><i></i><i></i></span>';
+    return '' +
+      '<article class="work-card" data-round="' + esc(w.round) + '">' +
+        '<div class="browser">' +
+          '<div class="browser-bar">' +
+            '<span class="dots"><i></i><i></i><i></i></span>' +
+            '<span class="browser-url">' + esc(hasUrl ? shortUrl(url) : "未提供链接") + '</span>' +
+          '</div>' +
+          '<div class="preview"' + (isVideo ? '' : ' style="--grad:' + grad + '"') + '>' +
+            previewInner +
+          '</div>' +
+        '</div>' +
+        '<div class="card-body">' +
+          '<div class="card-tags">' +
+            '<span class="badge round-' + esc(w.round) + '">第' + esc(w.round) + '次作业</span>' +
+          '</div>' +
+          '<h3>' + esc(w.title) + '</h3>' +
+          '<p class="author">' + esc(w.name) + ' <span class="sid">' + esc(w.id) + '</span></p>' +
+          '<div class="card-foot">' +
+            '<span class="date">' + esc(w.date) + '</span>' +
+            (isVideo
+              ? '<span class="playing-tag">视频 · 卡片内可直接播放</span>'
+              : (hasUrl
+                ? '<a class="demo-link" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">查看在线演示<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>'
+                : '<span class="no-link">暂无链接</span>')) +
+          '</div>' +
+        '</div>' +
+      '</article>';
+  }
+
+  var currentWorks = WORKS;
+
+  function render(filter) {
+    var grid = document.getElementById("works-grid");
+    var q = activeQuery;
+    var list = currentWorks.filter(function (w) {
+      var hitRound = filter === "all" || w.round === filter;
+      var hitQuery = !q
+        || String(w.id || "").toLowerCase().indexOf(q) !== -1
+        || String(w.name || "").toLowerCase().indexOf(q) !== -1;
+      return hitRound && hitQuery;
+    });
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty-state">' + (q ? "未找到匹配的作品" : "该轮次暂无作品") + '，敬请期待。</div>';
+      return;
+    }
+    grid.innerHTML = list.map(cardHtml).join("");
+  }
+
+  /* 数据规整：服务端返回的数据也统一成页面结构 */
+  function normalize(w) {
+    return {
+      id: w.id != null ? String(w.id) : "",
+      name: w.name != null ? String(w.name) : "",
+      title: w.title != null ? String(w.title) : "",
+      score: w.score == null || w.score === "" ? null : Number(w.score),
+      round: w.round != null ? String(w.round) : "1",
+      date: w.date != null ? String(w.date) : "",
+      url: w.url != null ? String(w.url) : "",
+      status: (function () {
+        var s = String(w.status != null ? w.status : "").trim();
+        return (s === "公开" || s === "显示" || s === "可见" || s === "是" || s === "1") ? "公开" : "隐藏";
+      })(),
+      comment: w.comment != null ? String(w.comment) : ""
+    };
+  }
+
+  /* 统计与渲染（内置数据 / 服务端数据共用） */
+  function applyData(list) {
+    var total = list.length;
+    var students = {};
+    var maxRound = 0;
+    list.forEach(function (w) {
+      if (w.id) students[w.id] = 1;
+      var r = parseInt(w.round, 10);
+      if (!isNaN(r) && r > maxRound) maxRound = r;
+    });
+    var studentCount = Object.keys(students).length;
+
+    document.getElementById("stat-total").textContent = total;
+    document.getElementById("stat-students").textContent = studentCount;
+    document.getElementById("stat-rounds").textContent = maxRound;
+    document.getElementById("fact-total").textContent = total + " 件";
+    document.getElementById("fact-students").textContent = studentCount + " 人";
+    document.getElementById("fact-rounds").textContent = maxRound + " 轮";
+    document.getElementById("public-count").textContent = total;
+    rebuildFilters(list);
+    render(activeFilter);
+  }
+
+  /* 筛选交互：按数据动态生成轮次按钮（事件委托） */
+  var filterWrap = document.querySelector(".works .filters");
+  var activeFilter = "all";
+
+  function rebuildFilters(works) {
+    var rounds = [];
+    works.forEach(function (w) {
+      if (w.round && rounds.indexOf(w.round) === -1) rounds.push(w.round);
+    });
+    rounds.sort(function (a, b) { return (+a) - (+b); });
+    if (activeFilter !== "all" && rounds.indexOf(activeFilter) === -1) activeFilter = "all";
+    var html = '<button class="filter' + (activeFilter === "all" ? " active" : "") + '" data-filter="all" role="tab" aria-selected="' + (activeFilter === "all" ? "true" : "false") + '">全部</button>';
+    rounds.forEach(function (r) {
+      html += '<button class="filter' + (activeFilter === r ? " active" : "") + '" data-filter="' + esc(r) + '" role="tab" aria-selected="' + (activeFilter === r ? "true" : "false") + '">第' + esc(r) + '次作业</button>';
+    });
+    filterWrap.innerHTML = html;
+  }
+
+  filterWrap.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest(".filter") : null;
+    if (!btn || !filterWrap.contains(btn)) return;
+    if (activeFilter === btn.getAttribute("data-filter")) return;
+    activeFilter = btn.getAttribute("data-filter");
+    var btns = filterWrap.querySelectorAll(".filter");
+    btns.forEach(function (b) {
+      var on = b === btn;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    render(activeFilter);
+  });
+
+  /* 搜索：按学号 / 姓名实时过滤（与轮次筛选叠加） */
+  var activeQuery = "";
+  var searchInput = document.getElementById("search-input");
+  searchInput.addEventListener("input", function () {
+    activeQuery = String(this.value || "").trim().toLowerCase();
+    render(activeFilter);
+  });
+
+  /* ===== CSV 数据源：读取本地 CSV（飞书多维表格 2026_media_ixd 导出） ===== */
+
+  function parseCsv(text) {
+    text = String(text).replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    var rows = [], row = [], field = "", inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text.charAt(i);
+      if (inQuotes) {
+        if (c === '"') {
+          if (text.charAt(i + 1) === '"') { field += '"'; i++; }
+          else { inQuotes = false; }
+        } else { field += c; }
+      } else if (c === '"') {
+        inQuotes = true;
+      } else if (c === ",") {
+        row.push(field); field = "";
+      } else if (c === "\n") {
+        row.push(field); rows.push(row); row = []; field = "";
+      } else {
+        field += c;
+      }
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (v) { return String(v).trim() !== ""; }); });
+  }
+
+  /* 表头别名：兼容不同导出/手工改名的列名 */
+  var HEADER_ALIAS = {
+    "学号": "id", "序号": "id",
+    "姓名": "name", "学生姓名": "name",
+    "作品名称": "title", "作品名": "title",
+    "作品链接": "url", "链接": "url", "作品地址": "url",
+    "作业次数": "round", "轮次": "round",
+    "提交时间": "date", "日期": "date",
+    "评分": "score", "分数": "score",
+    "评语": "comment", "评价": "comment", "备注": "comment",
+    "展示状态": "status", "状态": "status", "是否展示": "status", "公开状态": "status"
+  };
+
+  function csvToWorks(rows) {
+    if (!rows.length) return [];
+    var header = rows[0].map(function (h) { return String(h).trim(); });
+    var idx = {};
+    header.forEach(function (h, i) { idx[HEADER_ALIAS[h] || h] = i; });
+    function val(row, key) {
+      var i = idx[key];
+      return i === undefined ? "" : (row[i] == null ? "" : String(row[i]).trim());
+    }
+    return rows.slice(1).map(function (row) {
+      var score = parseFloat(val(row, "score"));
+      var date = val(row, "date").replace(/-/g, "/").slice(0, 10);
+      return {
+        id: val(row, "id"),
+        name: val(row, "name"),
+        title: val(row, "title"),
+        score: isNaN(score) ? null : score,
+        round: val(row, "round") || "1",
+        date: date,
+        url: val(row, "url"),
+        status: val(row, "status"),
+        comment: val(row, "comment")
+      };
+    });
+  }
+
+  function setSourceHint(html) {
+    var el = document.getElementById("data-source");
+    if (el) el.innerHTML = html;
+  }
+
+  /* 兼容 UTF-8 / GBK 编码：飞书在 Windows 下导出的 CSV 常为 GBK（ANSI） */
+  function decodeCsvBytes(buf) {
+    var u8 = new Uint8Array(buf);
+    if (u8.length >= 3 && u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) {
+      return new TextDecoder("utf-8").decode(u8);
+    }
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(u8);
+    } catch (e) {
+      try { return new TextDecoder("gbk").decode(u8); }
+      catch (e2) { return new TextDecoder("utf-8").decode(u8); }
+    }
+  }
+
+  function loadCsvText(text, label) {
+    var works = csvToWorks(parseCsv(text)).map(normalize);
+    if (!works.length) return false;
+    currentWorks = works;
+    applyData(currentWorks);
+    setSourceHint("已" + label + " · " + works.length + " 条记录");
+    return true;
+  }
+
+  function openCsvPicker() {
+    document.getElementById("csv-file").click();
+  }
+
+  function tryAutoLoadCsv() {
+    /* 用页面真实地址解析 CSV 路径，避免 <base> 标签或子路径部署导致请求被重定向 */
+    var csvUrl;
+    try { csvUrl = new URL(CSV_FILENAME, location.href).href; }
+    catch (e) { csvUrl = CSV_FILENAME; }
+    fetch(csvUrl)
+      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.arrayBuffer(); })
+      .then(function (buf) {
+        if (!loadCsvText(decodeCsvBytes(buf), "载入本地 CSV")) throw new Error("empty csv");
+      })
+      .catch(function () {
+        /* 本地 file:// 打开时浏览器禁止读取同目录文件，改为提示手动导入 */
+        setSourceHint('当前为内置数据，可点击「<a href="#" id="hint-import">导入 CSV</a>」载入最新导出');
+        var hint = document.getElementById("hint-import");
+        if (hint) hint.addEventListener("click", function (e) { e.preventDefault(); openCsvPicker(); });
+      });
+  }
+
+  document.getElementById("btn-import-csv").addEventListener("click", openCsvPicker);
+  document.getElementById("csv-file").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = decodeCsvBytes(reader.result);
+      if (!loadCsvText(text, "导入 CSV")) setSourceHint("导入失败：未能从文件中解析出数据记录");
+    };
+    reader.readAsArrayBuffer(file);
+    this.value = "";
+  });
+
+  /* 先渲染内置数据（保证页面立刻有内容） */
+  applyData(WORKS);
+
+  /* 自动读取同目录 CSV；本地直接打开页面时改用「导入 CSV」 */
+  tryAutoLoadCsv();
+})();
+</script>
+</body>
+</html>
